@@ -1,144 +1,126 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import api from '../../api/subjectService';
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit"
+
+// Simulated API calls
+const fetchSubjectsApi = async () => {
+  // Simulate API delay
+  await new Promise((resolve) => setTimeout(resolve, 1000))
+
+  // Return mock data
+  return [
+    {
+      id: 1,
+      name: "Mathematics",
+      code: "MATH",
+      classes: ["JSS1A", "JSS1B", "JSS2A", "SS1A", "SS2B"],
+      teachers: ["Dr. Robert Johnson", "Mrs. Patricia Adams"],
+    },
+    {
+      id: 2,
+      name: "English Language",
+      code: "ENG",
+      classes: ["JSS1A", "JSS1B", "JSS2A", "SS1A", "SS2B"],
+      teachers: ["Mrs. Elizabeth Taylor"],
+    },
+    {
+      id: 3,
+      name: "Physics",
+      code: "PHY",
+      classes: ["SS1A", "SS2B"],
+      teachers: ["Dr. Robert Johnson"],
+    },
+    {
+      id: 4,
+      name: "Chemistry",
+      code: "CHEM",
+      classes: ["SS1A", "SS2B"],
+      teachers: ["Mr. Michael Brown"],
+    },
+    {
+      id: 5,
+      name: "Biology",
+      code: "BIO",
+      classes: ["SS1A", "SS2B"],
+      teachers: ["Mr. Michael Brown"],
+    },
+    // Add more mock subjects as needed
+  ]
+}
+
+const addSubjectApi = async (subjectData) => {
+  // Simulate API delay
+  await new Promise((resolve) => setTimeout(resolve, 1000))
+
+  // Return the subject with an ID
+  return {
+    ...subjectData,
+    id: Math.floor(Math.random() * 1000),
+  }
+}
+
+// Async thunks
+export const fetchSubjects = createAsyncThunk("subjects/fetchSubjects", async (_, { rejectWithValue }) => {
+  try {
+    const subjects = await fetchSubjectsApi()
+    return subjects
+  } catch (error) {
+    return rejectWithValue(error.message)
+  }
+})
+
+export const addSubject = createAsyncThunk("subjects/addSubject", async (subjectData, { rejectWithValue }) => {
+  try {
+    const subject = await addSubjectApi(subjectData)
+    return subject
+  } catch (error) {
+    return rejectWithValue(error.message)
+  }
+})
 
 const initialState = {
   subjects: [],
-  currentSubject: null,
   loading: false,
   error: null,
-};
+}
 
-// Async thunks
-export const fetchSubjects = createAsyncThunk(
-  'subjects/fetchAll',
-  async () => {
-    const response = await api.getSubjects();
-    return response.data;
-  }
-);
-
-export const fetchSubjectById = createAsyncThunk(
-  'subjects/fetchById',
-  async (subjectId) => {
-    const response = await api.getSubject(subjectId);
-    return response.data;
-  }
-);
-
-export const createSubject = createAsyncThunk(
-  'subjects/create',
-  async (subjectData) => {
-    const response = await api.createSubject(subjectData);
-    return response.data;
-  }
-);
-
-export const updateSubject = createAsyncThunk(
-  'subjects/update',
-  async ({ id, ...subjectData }) => {
-    const response = await api.updateSubject(id, subjectData);
-    return response.data;
-  }
-);
-
-export const deleteSubject = createAsyncThunk(
-  'subjects/delete',
-  async (subjectId) => {
-    await api.deleteSubject(subjectId);
-    return subjectId;
-  }
-);
-
-const subjectSlice = createSlice({
-  name: 'subjects',
+const subjectsSlice = createSlice({
+  name: "subjects",
   initialState,
   reducers: {
-    clearCurrentSubject: (state) => {
-      state.currentSubject = null;
+    clearError: (state) => {
+      state.error = null
     },
   },
   extraReducers: (builder) => {
     builder
-      // Fetch Subjects
+      // Fetch subjects cases
       .addCase(fetchSubjects.pending, (state) => {
-        state.loading = true;
-        state.error = null;
+        state.loading = true
+        state.error = null
       })
       .addCase(fetchSubjects.fulfilled, (state, action) => {
-        state.loading = false;
-        state.subjects = action.payload;
+        state.loading = false
+        state.subjects = action.payload
       })
       .addCase(fetchSubjects.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.error.message;
+        state.loading = false
+        state.error = action.payload || "Failed to fetch subjects"
       })
-      
-      // Fetch Subject by ID
-      .addCase(fetchSubjectById.pending, (state) => {
-        state.loading = true;
-        state.error = null;
+      // Add subject cases
+      .addCase(addSubject.pending, (state) => {
+        state.loading = true
+        state.error = null
       })
-      .addCase(fetchSubjectById.fulfilled, (state, action) => {
-        state.loading = false;
-        state.currentSubject = action.payload;
+      .addCase(addSubject.fulfilled, (state, action) => {
+        state.loading = false
+        state.subjects.push(action.payload)
       })
-      .addCase(fetchSubjectById.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.error.message;
+      .addCase(addSubject.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload || "Failed to add subject"
       })
-      
-      // Create Subject
-      .addCase(createSubject.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(createSubject.fulfilled, (state, action) => {
-        state.loading = false;
-        state.subjects.push(action.payload);
-      })
-      .addCase(createSubject.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.error.message;
-      })
-      
-      // Update Subject
-      .addCase(updateSubject.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(updateSubject.fulfilled, (state, action) => {
-        state.loading = false;
-        const index = state.subjects.findIndex(s => s.id === action.payload.id);
-        if (index !== -1) {
-          state.subjects[index] = action.payload;
-        }
-        if (state.currentSubject?.id === action.payload.id) {
-          state.currentSubject = action.payload;
-        }
-      })
-      .addCase(updateSubject.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.error.message;
-      })
-      
-      // Delete Subject
-      .addCase(deleteSubject.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(deleteSubject.fulfilled, (state, action) => {
-        state.loading = false;
-        state.subjects = state.subjects.filter(s => s.id !== action.payload);
-        if (state.currentSubject?.id === action.payload) {
-          state.currentSubject = null;
-        }
-      })
-      .addCase(deleteSubject.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.error.message;
-      });
-  }
-});
+  },
+})
 
-export const { clearCurrentSubject } = subjectSlice.actions;
-export default subjectSlice.reducer;
+export const { clearError } = subjectsSlice.actions
+
+export default subjectsSlice.reducer

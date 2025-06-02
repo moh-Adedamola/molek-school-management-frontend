@@ -8,17 +8,10 @@ import { fetchSubjects } from "../../store/slices/subjectSlice"
 
 const ClassGrades = () => {
   const dispatch = useDispatch()
-  
-  // Add debugging and safer state access
-  const gradesState = useSelector((state) => state.grades || {})
-  const classesState = useSelector((state) => state.classes || {})
-  const subjectsState = useSelector((state) => state.subjects || {})
-  const authState = useSelector((state) => state.auth || {})
-  
-  const { grades = [], isLoading = false, error = null } = gradesState
-  const { classes = [] } = classesState
-  const { subjects = [] } = subjectsState
-  const { user } = authState
+  const { grades, loading, error } = useSelector((state) => state.grades)
+  const { classes } = useSelector((state) => state.classes)
+  const { subjects } = useSelector((state) => state.subjects)
+  const { user } = useSelector((state) => state.auth)
 
   const [filters, setFilters] = useState({
     classId: "",
@@ -80,7 +73,6 @@ const ClassGrades = () => {
       id: gradeId,
       ca: editForm.ca,
       exam: editForm.exam,
-      // Other fields will be preserved by the API/reducer
     }
 
     dispatch(updateGrade(gradeToUpdate)).then(() => {
@@ -92,9 +84,35 @@ const ClassGrades = () => {
     setEditingGrade(null)
   }
 
+  // Helper function to safely calculate previous terms average
+  const calculatePreviousTermsAverage = (previousTerms) => {
+    if (!previousTerms || !Array.isArray(previousTerms) || previousTerms.length === 0) {
+      return 0
+    }
+    const total = previousTerms.reduce((sum, term) => sum + (term?.total || 0), 0)
+    return Math.round(total / previousTerms.length)
+  }
+
+  // Helper function to safely get previous term total
+  const getPreviousTermTotal = (previousTerms, index = 0) => {
+    if (!previousTerms || !Array.isArray(previousTerms) || !previousTerms[index]) {
+      return 0
+    }
+    return previousTerms[index].total || 0
+  }
+
+  // Helper function to calculate cumulative average
+  const calculateCumulativeAverage = (currentTotal, previousTerms) => {
+    if (!previousTerms || !Array.isArray(previousTerms) || previousTerms.length === 0) {
+      return currentTotal
+    }
+    const previousTotal = previousTerms.reduce((sum, term) => sum + (term?.total || 0), 0)
+    return Math.round((currentTotal + previousTotal) / (previousTerms.length + 1))
+  }
+
   // Filter classes and subjects based on teacher assignments
-  const teacherClasses = classes
-  const teacherSubjects = subjects
+  const teacherClasses = classes || []
+  const teacherSubjects = subjects || []
 
   return (
     <div>
@@ -187,7 +205,7 @@ const ClassGrades = () => {
       </div>
 
       {/* Grades Table */}
-      {isLoading ? (
+      {loading ? (
         <div className="mt-6 flex justify-center items-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
         </div>
@@ -195,7 +213,7 @@ const ClassGrades = () => {
         <div className="mt-6 bg-red-50 border-l-4 border-red-500 p-4">
           <p className="text-sm text-red-700">{error}</p>
         </div>
-      ) : Array.isArray(grades) && grades.length > 0 ? (
+      ) : grades && grades.length > 0 ? (
         <div className="mt-6 flex flex-col">
           <div className="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
             <div className="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
@@ -249,102 +267,101 @@ const ClassGrades = () => {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {Array.isArray(grades) && grades.map((grade) => (
-                      <tr key={grade.id}>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">{grade.studentName}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {editingGrade === grade.id ? (
-                            <input
-                              type="number"
-                              name="ca"
-                              min="0"
-                              max="30"
-                              value={editForm.ca}
-                              onChange={handleEditChange}
-                              className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-20 sm:text-sm border-gray-300 rounded-md"
-                            />
-                          ) : (
-                            <div className="text-sm text-gray-900">{grade.ca}</div>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {editingGrade === grade.id ? (
-                            <input
-                              type="number"
-                              name="exam"
-                              min="0"
-                              max="70"
-                              value={editForm.exam}
-                              onChange={handleEditChange}
-                              className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-20 sm:text-sm border-gray-300 rounded-md"
-                            />
-                          ) : (
-                            <div className="text-sm text-gray-900">{grade.exam}</div>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">
-                            {editingGrade === grade.id
-                              ? Number.parseInt(editForm.ca || 0) + Number.parseInt(editForm.exam || 0)
-                              : grade.total}
-                          </div>
-                        </td>
-                        {filters.term > 1 && (
+                    {grades.map((grade) => {
+                      // Ensure grade has safe defaults
+                      const safeGrade = {
+                        ...grade,
+                        ca: grade.ca || 0,
+                        exam: grade.exam || 0,
+                        total: grade.total || 0,
+                        previousTerms: grade.previousTerms || []
+                      }
+
+                      return (
+                        <tr key={safeGrade.id}>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm font-medium text-gray-900">{safeGrade.studentName}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            {editingGrade === safeGrade.id ? (
+                              <input
+                                type="number"
+                                name="ca"
+                                min="0"
+                                max="30"
+                                value={editForm.ca}
+                                onChange={handleEditChange}
+                                className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-20 sm:text-sm border-gray-300 rounded-md"
+                              />
+                            ) : (
+                              <div className="text-sm text-gray-900">{safeGrade.ca}</div>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            {editingGrade === safeGrade.id ? (
+                              <input
+                                type="number"
+                                name="exam"
+                                min="0"
+                                max="70"
+                                value={editForm.exam}
+                                onChange={handleEditChange}
+                                className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-20 sm:text-sm border-gray-300 rounded-md"
+                              />
+                            ) : (
+                              <div className="text-sm text-gray-900">{safeGrade.exam}</div>
+                            )}
+                          </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="text-sm text-gray-900">
-                              {filters.term === 2
-                                ? grade.previousTerms?.[0]?.total || "N/A"
-                                : grade.previousTerms?.length > 0 
-                                  ? Math.round(
-                                      grade.previousTerms.reduce((sum, term) => sum + term.total, 0) /
-                                        grade.previousTerms.length,
-                                    )
-                                  : "N/A"}
+                              {editingGrade === safeGrade.id
+                                ? Number.parseInt(editForm.ca || 0) + Number.parseInt(editForm.exam || 0)
+                                : safeGrade.total}
                             </div>
                           </td>
-                        )}
-                        {filters.term > 1 && (
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900">
-                              {filters.term === 2
-                                ? grade.previousTerms?.[0]?.total 
-                                  ? Math.round((grade.total + grade.previousTerms[0].total) / 2)
-                                  : grade.total
-                                : grade.previousTerms?.length > 0
-                                  ? Math.round(
-                                      (grade.total + grade.previousTerms.reduce((sum, term) => sum + term.total, 0)) /
-                                        (grade.previousTerms.length + 1),
-                                    )
-                                  : grade.total}
-                            </div>
-                          </td>
-                        )}
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          {editingGrade === grade.id ? (
-                            <div className="flex space-x-2 justify-end">
+                          {filters.term > 1 && (
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-900">
+                                {filters.term === 2
+                                  ? getPreviousTermTotal(safeGrade.previousTerms, 0) || "N/A"
+                                  : calculatePreviousTermsAverage(safeGrade.previousTerms) || "N/A"}
+                              </div>
+                            </td>
+                          )}
+                          {filters.term > 1 && (
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-900">
+                                {filters.term === 2
+                                  ? Math.round((safeGrade.total + getPreviousTermTotal(safeGrade.previousTerms, 0)) / 2)
+                                  : calculateCumulativeAverage(safeGrade.total, safeGrade.previousTerms)}
+                              </div>
+                            </td>
+                          )}
+                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            {editingGrade === safeGrade.id ? (
+                              <div className="flex space-x-2 justify-end">
+                                <button
+                                  onClick={() => handleSaveGrade(safeGrade.id)}
+                                  className="text-green-600 hover:text-green-900"
+                                >
+                                  Save
+                                </button>
+                                <button onClick={handleCancelEdit} className="text-red-600 hover:text-red-900">
+                                  Cancel
+                                </button>
+                              </div>
+                            ) : (
                               <button
-                                onClick={() => handleSaveGrade(grade.id)}
-                                className="text-green-600 hover:text-green-900"
+                                onClick={() => handleEditClick(safeGrade)}
+                                className="text-indigo-600 hover:text-indigo-900"
                               >
-                                Save
+                                Edit
                               </button>
-                              <button onClick={handleCancelEdit} className="text-red-600 hover:text-red-900">
-                                Cancel
-                              </button>
-                            </div>
-                          ) : (
-                            <button
-                              onClick={() => handleEditClick(grade)}
-                              className="text-indigo-600 hover:text-indigo-900"
-                            >
-                              Edit
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
+                            )}
+                          </td>
+                        </tr>
+                      )
+                    })}
                   </tbody>
                 </table>
               </div>

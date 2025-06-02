@@ -1,169 +1,136 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit"
-import gradeService from "../../api/gradeService"
+
+// Simulated API calls
+const fetchGradesApi = async (params) => {
+  // Simulate API delay
+  await new Promise((resolve) => setTimeout(resolve, 1000))
+
+  // Return mock data based on class and subject
+  const { classId, subjectId, term } = params
+
+  // Generate mock grades for the class
+  return [
+    {
+      id: 1,
+      studentId: 1,
+      studentName: "John Doe",
+      classId,
+      subjectId,
+      term,
+      ca: 25, // out of 30
+      exam: 60, // out of 70
+      total: 85, // out of 100
+      previousTerms: term > 1 ? [{ term: 1, total: 78 }, term > 2 ? { term: 2, total: 82 } : null].filter(Boolean) : [],
+    },
+    {
+      id: 2,
+      studentId: 2,
+      studentName: "Jane Smith",
+      classId,
+      subjectId,
+      term,
+      ca: 28,
+      exam: 65,
+      total: 93,
+      previousTerms: term > 1 ? [{ term: 1, total: 88 }, term > 2 ? { term: 2, total: 90 } : null].filter(Boolean) : [],
+    },
+    // Add more mock student grades as needed
+  ]
+}
+
+const updateGradeApi = async (gradeData) => {
+  // Simulate API delay
+  await new Promise((resolve) => setTimeout(resolve, 1000))
+
+  // Calculate total
+  const total = (gradeData.ca || 0) + (gradeData.exam || 0)
+
+  // Return the updated grade
+  return {
+    ...gradeData,
+    total,
+  }
+}
 
 // Async thunks
-export const fetchGrades = createAsyncThunk(
-  "grades/fetchGrades",
-  async ({ classId, subjectId, termId, sessionId }, { rejectWithValue }) => {
-    try {
-      return await gradeService.getGrades(classId, subjectId, { termId, sessionId })
-    } catch (error) {
-      return rejectWithValue(error.message)
-    }
-  },
-)
-
-export const saveGrades = createAsyncThunk("grades/saveGrades", async (gradesData, { rejectWithValue }) => {
+export const fetchGrades = createAsyncThunk("grades/fetchGrades", async (params, { rejectWithValue }) => {
   try {
-    return await gradeService.saveGrades(gradesData)
+    const grades = await fetchGradesApi(params)
+    return { grades, params }
   } catch (error) {
     return rejectWithValue(error.message)
   }
 })
 
-export const fetchReportCards = createAsyncThunk(
-  "grades/fetchReportCards",
-  async ({ classId, termId, sessionId }, { rejectWithValue }) => {
-    try {
-      return await gradeService.generateReportCards(classId, { termId, sessionId })
-    } catch (error) {
-      return rejectWithValue(error.message)
-    }
-  },
-)
+export const updateGrade = createAsyncThunk("grades/updateGrade", async (gradeData, { rejectWithValue }) => {
+  try {
+    const grade = await updateGradeApi(gradeData)
+    return grade
+  } catch (error) {
+    return rejectWithValue(error.message)
+  }
+})
 
-export const fetchStudentReportCard = createAsyncThunk(
-  "grades/fetchStudentReportCard",
-  async ({ studentId, termId, sessionId }, { rejectWithValue }) => {
-    try {
-      return await gradeService.getStudentReportCard(studentId, { termId, sessionId })
-    } catch (error) {
-      return rejectWithValue(error.message)
-    }
-  },
-)
-
-export const fetchGradeStatistics = createAsyncThunk(
-  "grades/fetchGradeStatistics",
-  async ({ termId, sessionId }, { rejectWithValue }) => {
-    try {
-      return await gradeService.getGradeStatistics({ termId, sessionId })
-    } catch (error) {
-      return rejectWithValue(error.message)
-    }
-  },
-)
-
-// Initial state
 const initialState = {
   grades: [],
-  reportCards: [],
-  currentReportCard: null,
-  statistics: null,
-  isLoading: false,
+  currentClass: null,
+  currentSubject: null,
+  currentTerm: 1,
+  loading: false,
   error: null,
 }
 
-// Slice
-const gradeSlice = createSlice({
+const gradesSlice = createSlice({
   name: "grades",
   initialState,
   reducers: {
-    updateGrade: (state, action) => {
-      const { id, ca, exam } = action.payload;
-      const gradeIndex = state.grades.findIndex(grade => grade.id === id);
-      if (gradeIndex !== -1) {
-        state.grades[gradeIndex] = {
-          ...state.grades[gradeIndex],
-          ca,
-          exam,
-          total: ca + exam
-        };
-      }
+    clearError: (state) => {
+      state.error = null
     },
-    clearGrades: (state) => {
-      state.grades = []
-    },
-    clearReportCards: (state) => {
-      state.reportCards = []
-    },
-    clearCurrentReportCard: (state) => {
-      state.currentReportCard = null
+    setCurrentFilters: (state, action) => {
+      const { classId, subjectId, term } = action.payload
+      state.currentClass = classId
+      state.currentSubject = subjectId
+      state.currentTerm = term
     },
   },
   extraReducers: (builder) => {
     builder
-      // fetchGrades
+      // Fetch grades cases
       .addCase(fetchGrades.pending, (state) => {
-        state.isLoading = true
+        state.loading = true
         state.error = null
       })
       .addCase(fetchGrades.fulfilled, (state, action) => {
-        state.isLoading = false
-        state.grades = action.payload
+        state.loading = false
+        state.grades = action.payload.grades
+        state.currentClass = action.payload.params.classId
+        state.currentSubject = action.payload.params.subjectId
+        state.currentTerm = action.payload.params.term
       })
       .addCase(fetchGrades.rejected, (state, action) => {
-        state.isLoading = false
-        state.error = action.payload
+        state.loading = false
+        state.error = action.payload || "Failed to fetch grades"
       })
-      // saveGrades
-      .addCase(saveGrades.pending, (state) => {
-        state.isLoading = true
+      // Update grade cases
+      .addCase(updateGrade.pending, (state) => {
+        state.loading = true
         state.error = null
       })
-      .addCase(saveGrades.fulfilled, (state, action) => {
-        state.isLoading = false
-        // Update grades if needed
-        if (action.payload.grades) {
-          state.grades = action.payload.grades
+      .addCase(updateGrade.fulfilled, (state, action) => {
+        state.loading = false
+        const index = state.grades.findIndex((grade) => grade.id === action.payload.id)
+        if (index !== -1) {
+          state.grades[index] = action.payload
         }
       })
-      .addCase(saveGrades.rejected, (state, action) => {
-        state.isLoading = false
-        state.error = action.payload
-      })
-      // fetchReportCards
-      .addCase(fetchReportCards.pending, (state) => {
-        state.isLoading = true
-        state.error = null
-      })
-      .addCase(fetchReportCards.fulfilled, (state, action) => {
-        state.isLoading = false
-        state.reportCards = action.payload
-      })
-      .addCase(fetchReportCards.rejected, (state, action) => {
-        state.isLoading = false
-        state.error = action.payload
-      })
-      // fetchStudentReportCard
-      .addCase(fetchStudentReportCard.pending, (state) => {
-        state.isLoading = true
-        state.error = null
-      })
-      .addCase(fetchStudentReportCard.fulfilled, (state, action) => {
-        state.isLoading = false
-        state.currentReportCard = action.payload
-      })
-      .addCase(fetchStudentReportCard.rejected, (state, action) => {
-        state.isLoading = false
-        state.error = action.payload
-      })
-      // fetchGradeStatistics
-      .addCase(fetchGradeStatistics.pending, (state) => {
-        state.isLoading = true
-        state.error = null
-      })
-      .addCase(fetchGradeStatistics.fulfilled, (state, action) => {
-        state.isLoading = false
-        state.statistics = action.payload
-      })
-      .addCase(fetchGradeStatistics.rejected, (state, action) => {
-        state.isLoading = false
-        state.error = action.payload
+      .addCase(updateGrade.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload || "Failed to update grade"
       })
   },
 })
 
-export const { updateGrade, clearGrades, clearReportCards, clearCurrentReportCard } = gradeSlice.actions
+export const { clearError, setCurrentFilters } = gradesSlice.actions
 
-export default gradeSlice.reducer
+export default gradesSlice.reducer
