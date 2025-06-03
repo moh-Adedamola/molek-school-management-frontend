@@ -12,15 +12,18 @@ const fetchReportData = () => {
         classes: [
           { id: 1, name: "JSS 1A" },
           { id: 2, name: "JSS 1B" },
-          { id: 3, name: "JSS 2A" },
-          { id: 4, name: "JSS 2B" },
-          { id: 5, name: "JSS 3A" },
-          { id: 6, name: "JSS 3B" },
+          { id: 3, name: "JSS 1C" },
+          { id: 4, name: "JSS 2A" },
+          { id: 5, name: "JSS 2B" },
+          { id: 6, name: "JSS 2C" },
+          { id: 7, name: "JSS 3A" },
+          { id: 8, name: "JSS 3B" },
+          { id: 9, name: "JSS 3C" },
         ],
         subjects: [
           { id: 1, name: "Mathematics" },
           { id: 2, name: "English" },
-          { id: 3, name: "Science" },
+          { id: 3, name: "Basic Science" },
           { id: 4, name: "Social Studies" },
           { id: 5, name: "Computer Science" },
         ],
@@ -30,8 +33,10 @@ const fetchReportData = () => {
           { id: 3, name: "Third Term" },
         ],
         sessions: [
-          { id: 1, name: "2022/2023" },
-          { id: 2, name: "2023/2024" },
+          { id: 1, name: "2021/2022" },
+          { id: 2, name: "2022/2023" },
+          { id: 3, name: "2023/2024" },
+          { id: 4, name: "2024/2025" },
         ],
       })
     }, 500)

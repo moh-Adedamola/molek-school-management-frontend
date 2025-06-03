@@ -64,8 +64,8 @@ const DashboardLayout = ({ role }) => {
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
-      {/* Header */}
-      <header className="bg-blue-600 text-white shadow-md">
+      {/* Header - fixed position */}
+      <header className="bg-blue-600 text-white shadow-md fixed w-full z-20">
         <div className="container mx-auto px-4 py-3 flex justify-between items-center">
           <div className="flex items-center">
             <button onClick={() => setSidebarOpen(!sidebarOpen)} className="mr-4 md:hidden">
@@ -86,12 +86,12 @@ const DashboardLayout = ({ role }) => {
         </div>
       </header>
 
-      <div className="flex flex-1">
-        {/* Sidebar */}
+      <div className="flex flex-1 pt-16"> {/* Add pt-16 to account for header height */}
+        {/* Sidebar - fixed position but below header */}
         <aside
-          className={`bg-white w-64 shadow-lg fixed inset-y-0 left-0 transform ${
+          className={`bg-white w-64 shadow-lg fixed top-16 bottom-0 left-0 transform ${
             sidebarOpen ? "translate-x-0" : "-translate-x-full"
-          } md:translate-x-0 transition-transform duration-300 ease-in-out z-10 pt-16`}
+          } md:translate-x-0 transition-transform duration-300 ease-in-out z-10`}
         >
           <nav className="mt-8 px-4">
             <ul className="space-y-2">
@@ -111,8 +111,8 @@ const DashboardLayout = ({ role }) => {
           </nav>
         </aside>
 
-        {/* Main content */}
-        <main className="flex-1 md:ml-64 p-4">
+        {/* Main content - with margin for sidebar and padding for header */}
+        <main className="flex-1 md:ml-64 p-4 mt-16"> {/* Add mt-16 to account for header height */}
           <div className="container mx-auto">
             <Outlet />
           </div>

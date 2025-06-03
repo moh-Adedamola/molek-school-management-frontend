@@ -1,423 +1,481 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { toast } from "react-toastify"
 import { FileText, Download, Printer, BarChart2 } from "lucide-react"
+import PropTypes from "prop-types"
 
-// Mock API call - replace with actual API call in production
-const fetchReportData = () => {
+// Constants for mock data (would come from API in real app)
+const MOCK_DATA = {
+  classes: [
+    { id: 1, name: "JSS 1A" },
+    { id: 2, name: "JSS 2B" },
+    { id: 3, name: "JSS 3A" },
+  ],
+  subjects: [
+    { id: 1, name: "Mathematics" },
+    { id: 2, name: "English" },
+    { id: 3, name: "Science" },
+    { id: 4, name: "Social Studies" },
+  ],
+  terms: [
+    { id: 1, name: "First Term" },
+    { id: 2, name: "Second Term" },
+    { id: 3, name: "Third Term" },
+  ],
+  sessions: [
+    { id: 1, name: "2022/2023" },
+    { id: 2, name: "2023/2024" },
+    { id: 3, name: "2024/2025" },
+  ],
+}
+
+// Mock API functions
+const fetchReportData = async () => {
   return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        classes: [
-          { id: 1, name: "JSS 1A" },
-          { id: 2, name: "JSS 2B" },
-          { id: 3, name: "JSS 3A" },
-        ],
-        subjects: [
-          { id: 1, name: "Mathematics" },
-          { id: 2, name: "English" },
-          { id: 3, name: "Science" },
-          { id: 4, name: "Social Studies" },
-        ],
-        terms: [
-          { id: 1, name: "First Term" },
-          { id: 2, name: "Second Term" },
-          { id: 3, name: "Third Term" },
-        ],
-        sessions: [
-          { id: 1, name: "2022/2023" },
-          { id: 2, name: "2023/2024" },
-        ],
-      })
-    }, 500)
+    setTimeout(() => resolve(MOCK_DATA), 500)
   })
 }
 
-const fetchClassReport = (classId, subjectId, termId, sessionId) => {
+const generateMockReport = (classId, subjectId, termId, sessionId) => {
   return new Promise((resolve) => {
     setTimeout(() => {
-      // Generate mock report data
-      const students = Array.from({ length: 10 }, (_, i) => ({
-        id: i + 1,
-        name: `Student ${i + 1}`,
-        admissionNumber: `STD${classId}${i + 1}`,
-        test1: Math.floor(Math.random() * 16), // 0-15
-        test2: Math.floor(Math.random() * 16), // 0-15
-        exam: Math.floor(Math.random() * 71), // 0-70
-      }))
+      const students = Array.from({ length: 10 }, (_, i) => {
+        const test1 = Math.floor(Math.random() * 16)
+        const test2 = Math.floor(Math.random() * 16)
+        const exam = Math.floor(Math.random() * 71)
+        const total = test1 + test2 + exam
 
-      // Calculate total and grade for each student
-      const studentsWithGrades = students.map((student) => {
-        const total = student.test1 + student.test2 + student.exam
-        let grade = ""
-        if (total >= 90) grade = "A+"
-        else if (total >= 80) grade = "A"
-        else if (total >= 70) grade = "B"
-        else if (total >= 60) grade = "C"
-        else if (total >= 50) grade = "D"
-        else if (total >= 40) grade = "E"
-        else grade = "F"
+        const grade =
+            total >= 80 ? "A" :
+              total >= 70 ? "B" :
+                total >= 60 ? "C" :
+                  total >= 50 ? "D" :
+                    total >= 40 ? "E" : "F"
 
-        return { ...student, total, grade }
+        return {
+          id: i + 1,
+          name: `Student ${i + 1}`,
+          admissionNumber: `STD${classId}${i + 1}`,
+          test1,
+          test2,
+          exam,
+          total,
+          grade
+        }
       })
 
-      // Sort by total score (descending)
-      studentsWithGrades.sort((a, b) => b.total - a.total)
+      const sortedStudents = students
+        .sort((a, b) => b.total - a.total)
+        .map((student, index) => ({ ...student, position: index + 1 }))
 
-      // Add position
-      const studentsWithPosition = studentsWithGrades.map((student, index) => ({
-        ...student,
-        position: index + 1,
-      }))
-
-      // Calculate statistics
-      const totalScores = studentsWithPosition.map((s) => s.total)
+      const totalScores = sortedStudents.map(s => s.total)
       const highestScore = Math.max(...totalScores)
       const lowestScore = Math.min(...totalScores)
       const averageScore = Math.round(totalScores.reduce((a, b) => a + b, 0) / totalScores.length)
-      const passCount = studentsWithPosition.filter((s) => s.total >= 40).length
-      const failCount = studentsWithPosition.length - passCount
-      const passRate = Math.round((passCount / studentsWithPosition.length) * 100)
+      const passCount = sortedStudents.filter(s => s.total >= 40).length
+      const failCount = sortedStudents.length - passCount
+      const passRate = Math.round((passCount / sortedStudents.length) * 100)
 
       resolve({
-        students: studentsWithPosition,
-        stats: {
-          highestScore,
-          lowestScore,
-          averageScore,
-          passCount,
-          failCount,
-          passRate,
-        },
+        students: sortedStudents,
+        stats: { highestScore, lowestScore, averageScore, passCount, failCount, passRate }
       })
     }, 1000)
   })
 }
 
 const TeacherReports = () => {
-  const [classes, setClasses] = useState([])
-  const [subjects, setSubjects] = useState([])
-  const [terms, setTerms] = useState([])
-  const [sessions, setSessions] = useState([])
-  const [selectedClass, setSelectedClass] = useState("")
-  const [selectedSubject, setSelectedSubject] = useState("")
-  const [selectedTerm, setSelectedTerm] = useState("")
-  const [selectedSession, setSelectedSession] = useState("")
+  const [filters, setFilters] = useState({
+    class: "",
+    subject: "",
+    term: "",
+    session: ""
+  })
   const [reportData, setReportData] = useState(null)
-  const [isLoading, setIsLoading] = useState(false)
-  const [isInitialLoading, setIsInitialLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState({
+    initial: true,
+    report: false
+  })
+  const [dropdownData, setDropdownData] = useState({
+    classes: [],
+    subjects: [],
+    terms: [],
+    sessions: []
+  })
 
+  // Load initial dropdown data
   useEffect(() => {
-    const loadInitialData = async () => {
+    const loadData = async () => {
       try {
         const data = await fetchReportData()
-        setClasses(data.classes)
-        setSubjects(data.subjects)
-        setTerms(data.terms)
-        setSessions(data.sessions)
-        setIsInitialLoading(false)
+        setDropdownData({
+          classes: data.classes,
+          subjects: data.subjects,
+          terms: data.terms,
+          sessions: data.sessions
+        })
       } catch (error) {
-        console.error("Error loading initial data:", error)
         toast.error("Failed to load initial data")
-        setIsInitialLoading(false)
+        console.error(error)
+      } finally {
+        setIsLoading(prev => ({ ...prev, initial: false }))
       }
     }
 
-    loadInitialData()
+    loadData()
   }, [])
 
-  const handleGenerateReport = async () => {
-    if (!selectedClass || !selectedSubject || !selectedTerm || !selectedSession) {
+  const handleFilterChange = useCallback((field, value) => {
+    setFilters(prev => ({ ...prev, [field]: value }))
+  }, [])
+
+  const handleGenerateReport = useCallback(async () => {
+    if (Object.values(filters).some(val => !val)) {
       toast.error("Please select all required fields")
       return
     }
 
-    setIsLoading(true)
+    setIsLoading(prev => ({ ...prev, report: true }))
     try {
-      const data = await fetchClassReport(selectedClass, selectedSubject, selectedTerm, selectedSession)
+      const data = await generateMockReport(
+        filters.class,
+        filters.subject,
+        filters.term,
+        filters.session
+      )
       setReportData(data)
     } catch (error) {
-      console.error("Error generating report:", error)
       toast.error("Failed to generate report")
+      console.error(error)
     } finally {
-      setIsLoading(false)
+      setIsLoading(prev => ({ ...prev, report: false }))
     }
-  }
+  }, [filters])
 
-  const handlePrintReport = () => {
+  const handlePrint = useCallback(() => {
     window.print()
-  }
+  }, [])
 
-  const handleDownloadReport = () => {
-    // In a real app, this would generate and download a PDF or Excel file
-    toast.info("This would download the report as a PDF or Excel file in a real application")
-  }
+  const handleDownload = useCallback(() => {
+    toast.info("Export functionality would be implemented here")
+    // In production: Generate PDF/Excel and trigger download
+  }, [])
 
-  if (isInitialLoading) {
+  if (isLoading.initial) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      <div className="flex justify-center items-center min-h-[300px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500" />
       </div>
     )
   }
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold mb-6">Generate Reports</h1>
+    <div className="container mx-auto px-4 py-6">
+      <h1 className="text-2xl font-bold text-gray-800 mb-6">Generate Reports</h1>
 
-      <div className="bg-white p-4 rounded-lg shadow mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Select Class</label>
-            <select
-              className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              value={selectedClass}
-              onChange={(e) => setSelectedClass(e.target.value)}
-            >
-              <option value="">Select a class</option>
-              {classes.map((cls) => (
-                <option key={cls.id} value={cls.id}>
-                  {cls.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Select Subject</label>
-            <select
-              className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              value={selectedSubject}
-              onChange={(e) => setSelectedSubject(e.target.value)}
-            >
-              <option value="">Select a subject</option>
-              {subjects.map((subject) => (
-                <option key={subject.id} value={subject.id}>
-                  {subject.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Select Term</label>
-            <select
-              className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              value={selectedTerm}
-              onChange={(e) => setSelectedTerm(e.target.value)}
-            >
-              <option value="">Select a term</option>
-              {terms.map((term) => (
-                <option key={term.id} value={term.id}>
-                  {term.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Select Session</label>
-            <select
-              className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              value={selectedSession}
-              onChange={(e) => setSelectedSession(e.target.value)}
-            >
-              <option value="">Select a session</option>
-              {sessions.map((session) => (
-                <option key={session.id} value={session.id}>
-                  {session.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        <div className="mt-4 flex justify-end">
-          <button
-            onClick={handleGenerateReport}
-            disabled={isLoading}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center disabled:opacity-50"
-          >
-            <FileText size={18} className="mr-2" />
-            {isLoading ? "Generating..." : "Generate Report"}
-          </button>
-        </div>
-      </div>
+      <ReportFilters
+        data={dropdownData}
+        filters={filters}
+        onChange={handleFilterChange}
+        onGenerate={handleGenerateReport}
+        isLoading={isLoading.report}
+      />
 
       {reportData && (
-        <div className="bg-white rounded-lg shadow overflow-hidden" id="printable-report">
-          <div className="p-4 bg-blue-50 border-b border-blue-100 flex justify-between items-center print:bg-white">
-            <div>
-              <h2 className="text-lg font-semibold">
-                {subjects.find((s) => s.id.toString() === selectedSubject)?.name} Report -{" "}
-                {classes.find((c) => c.id.toString() === selectedClass)?.name}
-              </h2>
-              <p className="text-sm text-gray-600">
-                {terms.find((t) => t.id.toString() === selectedTerm)?.name},{" "}
-                {sessions.find((s) => s.id.toString() === selectedSession)?.name} Academic Session
-              </p>
-            </div>
-            <div className="flex space-x-2 print:hidden">
-              <button
-                onClick={handlePrintReport}
-                className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded-md flex items-center text-sm"
-              >
-                <Printer size={16} className="mr-1" />
-                Print
-              </button>
-              <button
-                onClick={handleDownloadReport}
-                className="bg-green-100 hover:bg-green-200 text-green-700 px-3 py-1 rounded-md flex items-center text-sm"
-              >
-                <Download size={16} className="mr-1" />
-                Download
-              </button>
-            </div>
-          </div>
-
-          {/* Statistics */}
-          <div className="p-4 border-b border-gray-200">
-            <h3 className="text-md font-semibold mb-3">Class Statistics</h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-              <div className="bg-blue-50 p-3 rounded-lg">
-                <div className="text-sm text-gray-600">Highest Score</div>
-                <div className="text-xl font-bold">{reportData.stats.highestScore}%</div>
-              </div>
-              <div className="bg-blue-50 p-3 rounded-lg">
-                <div className="text-sm text-gray-600">Lowest Score</div>
-                <div className="text-xl font-bold">{reportData.stats.lowestScore}%</div>
-              </div>
-              <div className="bg-blue-50 p-3 rounded-lg">
-                <div className="text-sm text-gray-600">Average Score</div>
-                <div className="text-xl font-bold">{reportData.stats.averageScore}%</div>
-              </div>
-              <div className="bg-green-50 p-3 rounded-lg">
-                <div className="text-sm text-gray-600">Pass Count</div>
-                <div className="text-xl font-bold">{reportData.stats.passCount}</div>
-              </div>
-              <div className="bg-red-50 p-3 rounded-lg">
-                <div className="text-sm text-gray-600">Fail Count</div>
-                <div className="text-xl font-bold">{reportData.stats.failCount}</div>
-              </div>
-              <div className="bg-purple-50 p-3 rounded-lg">
-                <div className="text-sm text-gray-600">Pass Rate</div>
-                <div className="text-xl font-bold">{reportData.stats.passRate}%</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Grade Distribution Chart (simplified) */}
-          <div className="p-4 border-b border-gray-200 print:hidden">
-            <div className="flex items-center mb-3">
-              <BarChart2 size={18} className="mr-2 text-blue-600" />
-              <h3 className="text-md font-semibold">Grade Distribution</h3>
-            </div>
-            <div className="h-16 flex items-end space-x-1">
-              {["A+", "A", "B", "C", "D", "E", "F"].map((grade) => {
-                const count = reportData.students.filter((s) => s.grade === grade).length
-                const percentage = Math.round((count / reportData.students.length) * 100) || 0
-                return (
-                  <div key={grade} className="flex flex-col items-center flex-1">
-                    <div
-                      className={`w-full ${
-                        grade === "F" ? "bg-red-500" : grade === "E" || grade === "D" ? "bg-yellow-500" : "bg-green-500"
-                      }`}
-                      style={{ height: `${percentage}%`, minHeight: count ? "4px" : "0" }}
-                    ></div>
-                    <div className="text-xs mt-1">{grade}</div>
-                    <div className="text-xs text-gray-500">{count}</div>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-
-          {/* Students Table */}
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Position
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Student Name
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Admission Number
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Test 1 (15)
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Test 2 (15)
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Exam (70)
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Total (100)
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Grade
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {reportData.students.map((student) => (
-                  <tr key={student.id}>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{student.position}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{student.name}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-500">{student.admissionNumber}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{student.test1}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{student.test2}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{student.exam}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{student.total}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          student.grade === "A+" || student.grade === "A"
-                            ? "bg-green-100 text-green-800"
-                            : student.grade === "B"
-                              ? "bg-blue-100 text-blue-800"
-                              : student.grade === "C"
-                                ? "bg-yellow-100 text-yellow-800"
-                                : student.grade === "D" || student.grade === "E"
-                                  ? "bg-orange-100 text-orange-800"
-                                  : "bg-red-100 text-red-800"
-                        }`}
-                      >
-                        {student.grade}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="p-4 text-sm text-gray-500 border-t border-gray-200">
-            <p>Report generated on {new Date().toLocaleDateString()}</p>
-          </div>
-        </div>
+        <ReportViewer
+          data={reportData}
+          filters={filters}
+          dropdownData={dropdownData}
+          onPrint={handlePrint}
+          onDownload={handleDownload}
+        />
       )}
     </div>
   )
+}
+
+// Sub-components for better organization
+const ReportFilters = ({ data, filters, onChange, onGenerate, isLoading }) => (
+  <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <SelectInput
+        label="Select Class"
+        options={data.classes}
+        value={filters.class}
+        onChange={(e) => onChange("class", e.target.value)}
+      />
+      <SelectInput
+        label="Select Subject"
+        options={data.subjects}
+        value={filters.subject}
+        onChange={(e) => onChange("subject", e.target.value)}
+      />
+      <SelectInput
+        label="Select Term"
+        options={data.terms}
+        value={filters.term}
+        onChange={(e) => onChange("term", e.target.value)}
+      />
+      <SelectInput
+        label="Select Session"
+        options={data.sessions}
+        value={filters.session}
+        onChange={(e) => onChange("session", e.target.value)}
+      />
+    </div>
+    <div className="mt-6 flex justify-end">
+      <button
+        onClick={onGenerate}
+        disabled={isLoading}
+        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md flex items-center transition-colors disabled:opacity-50"
+        aria-label={isLoading ? "Generating report" : "Generate report"}
+      >
+        <FileText size={18} className="mr-2" />
+        {isLoading ? (
+          <span className="flex items-center">
+            <span className="animate-pulse">Generating</span>
+          </span>
+        ) : (
+          "Generate Report"
+        )}
+      </button>
+    </div>
+  </div>
+)
+
+const SelectInput = ({ label, options, value, onChange }) => (
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-2">
+      {label}
+    </label>
+    <select
+      value={value}
+      onChange={onChange}
+      className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors"
+    >
+      <option value="">Select an option</option>
+      {options.map((option) => (
+        <option key={option.id} value={option.id}>
+          {option.name}
+        </option>
+      ))}
+    </select>
+  </div>
+)
+
+const ReportViewer = ({ data, filters, dropdownData, onPrint, onDownload }) => {
+  const { students, stats } = data
+  const gradeDistribution = [ "A", "B", "C", "D", "E", "F"].map(grade => ({
+    grade,
+    count: students.filter(s => s.grade === grade).length
+  }))
+
+  return (
+    <div className="bg-white rounded-lg shadow-md overflow-hidden" id="printable-report">
+      <ReportHeader
+        filters={filters}
+        dropdownData={dropdownData}
+        onPrint={onPrint}
+        onDownload={onDownload}
+      />
+
+      <ReportStatistics stats={stats} />
+
+      <GradeDistributionChart distribution={gradeDistribution} totalStudents={students.length} />
+
+      <StudentsTable students={students} />
+
+      <ReportFooter />
+    </div>
+  )
+}
+
+const ReportHeader = ({ filters, dropdownData, onPrint, onDownload }) => {
+  const subject = dropdownData.subjects.find(s => s.id.toString() === filters.subject)
+  const classInfo = dropdownData.classes.find(c => c.id.toString() === filters.class)
+  const term = dropdownData.terms.find(t => t.id.toString() === filters.term)
+  const session = dropdownData.sessions.find(s => s.id.toString() === filters.session)
+
+  return (
+    <div className="p-6 bg-blue-50 border-b border-blue-100 flex flex-col sm:flex-row justify-between items-start sm:items-center print:bg-white">
+      <div>
+        <h2 className="text-xl font-semibold text-gray-800">
+          {subject?.name} Report - {classInfo?.name}
+        </h2>
+        <p className="text-sm text-gray-600 mt-1">
+          {term?.name}, {session?.name} Academic Session
+        </p>
+      </div>
+      <div className="mt-4 sm:mt-0 flex space-x-3 print:hidden">
+        <ActionButton
+          icon={<Printer size={16} />}
+          label="Print"
+          onClick={onPrint}
+          color="gray"
+        />
+        <ActionButton
+          icon={<Download size={16} />}
+          label="Download"
+          onClick={onDownload}
+          color="green"
+        />
+      </div>
+    </div>
+  )
+}
+
+const ActionButton = ({ icon, label, onClick, color = "gray" }) => {
+  const colorClasses = {
+    gray: "bg-gray-100 hover:bg-gray-200 text-gray-700",
+    green: "bg-green-100 hover:bg-green-200 text-green-700",
+    blue: "bg-blue-100 hover:bg-blue-200 text-blue-700"
+  }
+
+  return (
+    <button
+      onClick={onClick}
+      className={`${colorClasses[color]} px-4 py-2 rounded-md flex items-center text-sm transition-colors`}
+    >
+      <span className="mr-2">{icon}</span>
+      {label}
+    </button>
+  )
+}
+
+const ReportStatistics = ({ stats }) => (
+  <div className="p-6 border-b border-gray-200">
+    <h3 className="text-lg font-semibold text-gray-800 mb-4">Class Statistics</h3>
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <StatCard label="Highest Score" value={`${stats.highestScore}%`} color="blue" />
+      <StatCard label="Lowest Score" value={`${stats.lowestScore}%`} color="blue" />
+      <StatCard label="Average Score" value={`${stats.averageScore}%`} color="blue" />
+      <StatCard label="Pass Count" value={stats.passCount} color="green" />
+      <StatCard label="Fail Count" value={stats.failCount} color="red" />
+      <StatCard label="Pass Rate" value={`${stats.passRate}%`} color="purple" />
+    </div>
+  </div>
+)
+
+const StatCard = ({ label, value, color = "blue" }) => {
+  const colorClasses = {
+    blue: "bg-blue-50",
+    green: "bg-green-50",
+    red: "bg-red-50",
+    purple: "bg-purple-50"
+  }
+
+  return (
+    <div className={`${colorClasses[color]} p-4 rounded-lg`}>
+      <div className="text-sm text-gray-600">{label}</div>
+      <div className="text-2xl font-bold mt-1">{value}</div>
+    </div>
+  )
+}
+
+const GradeDistributionChart = ({ distribution, totalStudents }) => (
+  <div className="p-6 border-b border-gray-200 print:hidden">
+    <div className="flex items-center mb-4">
+      <BarChart2 size={18} className="mr-2 text-blue-600" />
+      <h3 className="text-lg font-semibold text-gray-800">Grade Distribution</h3>
+    </div>
+    <div className="h-20 flex items-end space-x-2">
+      {distribution.map(({ grade, count }) => {
+        const percentage = Math.round((count / totalStudents) * 100) || 0
+        const color =
+          grade === "F" ? "bg-red-500" :
+            grade === "E" || grade === "D" ? "bg-yellow-500" :
+              "bg-green-500"
+
+        return (
+          <div key={grade} className="flex flex-col items-center flex-1">
+            <div
+              className={`w-full ${color} rounded-t-sm transition-all duration-300`}
+              style={{ height: `${percentage}%`, minHeight: count ? "4px" : "0" }}
+              aria-label={`${count} students with grade ${grade}`}
+            />
+            <div className="text-xs mt-2 font-medium">{grade}</div>
+            <div className="text-xs text-gray-500">{count}</div>
+          </div>
+        )
+      })}
+    </div>
+  </div>
+)
+
+const StudentsTable = ({ students }) => (
+  <div className="overflow-x-auto">
+    <table className="min-w-full divide-y divide-gray-200">
+      <thead className="bg-gray-50">
+        <tr>
+          <TableHeader>Position</TableHeader>
+          <TableHeader>Student Name</TableHeader>
+          <TableHeader>Admission No.</TableHeader>
+          <TableHeader>First C.A (15)</TableHeader>
+          <TableHeader>Second C.A (15)</TableHeader>
+          <TableHeader>Exam (70)</TableHeader>
+          <TableHeader>Total (100)</TableHeader>
+          <TableHeader>Grade</TableHeader>
+        </tr>
+      </thead>
+      <tbody className="bg-white divide-y divide-gray-200">
+        {students.map((student) => (
+          <TableRow key={student.id} student={student} />
+        ))}
+      </tbody>
+    </table>
+  </div>
+)
+
+const TableHeader = ({ children }) => (
+  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+    {children}
+  </th>
+)
+
+const TableRow = ({ student }) => {
+  const gradeColor = {
+    "A+": "bg-green-100 text-green-800",
+    "A": "bg-green-100 text-green-800",
+    "B": "bg-blue-100 text-blue-800",
+    "C": "bg-yellow-100 text-yellow-800",
+    "D": "bg-orange-100 text-orange-800",
+    "E": "bg-orange-100 text-orange-800",
+    "F": "bg-red-100 text-red-800"
+  }[student.grade]
+
+  return (
+    <tr>
+      <TableCell>{student.position}</TableCell>
+      <TableCell className="font-medium">{student.name}</TableCell>
+      <TableCell>{student.admissionNumber}</TableCell>
+      <TableCell>{student.test1}</TableCell>
+      <TableCell>{student.test2}</TableCell>
+      <TableCell>{student.exam}</TableCell>
+      <TableCell className="font-medium">{student.total}</TableCell>
+      <TableCell>
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${gradeColor}`}>
+          {student.grade}
+        </span>
+      </TableCell>
+    </tr>
+  )
+}
+
+const TableCell = ({ children, className = "" }) => (
+  <td className={`px-4 py-4 whitespace-nowrap text-sm ${className}`}>
+    {children}
+  </td>
+)
+
+const ReportFooter = () => (
+  <div className="p-4 text-sm text-gray-500 border-t border-gray-200">
+    <p>Report generated on {new Date().toLocaleDateString()}</p>
+  </div>
+)
+
+TeacherReports.propTypes = {
+  role: PropTypes.string
 }
 
 export default TeacherReports

@@ -11,28 +11,28 @@ const fetchStudentsWithoutParentAccounts = () => {
       resolve([
         {
           id: 1,
-          name: "John Doe",
+          name: "Tadese Maryam",
           admissionNumber: "STD2022001",
           class: "JSS 1A",
-          parentName: "Mr. Doe",
+          parentName: "Mr and Mrs Tadese",
           parentEmail: "parent1@example.com",
           hasParentAccount: false,
         },
         {
           id: 2,
-          name: "Jane Smith",
+          name: "Adepoju Fareedah",
           admissionNumber: "STD2022002",
           class: "JSS 2B",
-          parentName: "Mrs. Smith",
+          parentName: "Mr and Mrs Adepoju",
           parentEmail: "parent2@example.com",
           hasParentAccount: false,
         },
         {
           id: 3,
-          name: "Michael Johnson",
+          name: "Idris Sharif",
           admissionNumber: "STD2022003",
           class: "JSS 3A",
-          parentName: "Mr. Johnson",
+          parentName: "Mr and Mrs Idris",
           parentEmail: "parent3@example.com",
           hasParentAccount: false,
         },
@@ -139,7 +139,7 @@ const GenerateParentCredentials = () => {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-6">Generate Parent Credentials</h1>
+      <h1 className="text-2xl font-bold mb-6">Generate Parent Login Details</h1>
 
       {/* Search Bar */}
       <div className="bg-white p-4 rounded-lg shadow mb-6">
@@ -218,7 +218,7 @@ const GenerateParentCredentials = () => {
         {/* Generated Credentials */}
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <div className="p-4 bg-green-50 border-b border-green-100">
-            <h2 className="text-lg font-semibold">Generated Credentials</h2>
+            <h2 className="text-lg font-semibold">Generated Details</h2>
           </div>
 
           <div className="overflow-x-auto">

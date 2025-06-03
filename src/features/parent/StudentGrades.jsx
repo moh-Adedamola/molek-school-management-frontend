@@ -11,16 +11,15 @@ const StudentGrades = () => {
   const [selectedTerm, setSelectedTerm] = useState(1)
 
   useEffect(() => {
-    // Simulate API call to fetch student data
     const fetchStudentData = async () => {
       try {
-        // In a real app, this would be an API call using the parent's ID to get their children
-        await new Promise((resolve) => setTimeout(resolve, 1000))
-
-        // Mock data for a student
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        
+        // Mock data
         setStudentData({
           id: 1,
-          name: "John Doe",
+          name: "Tadese Maryam",
           class: "JSS2A",
           admissionNumber: "MOL123",
           terms: [
@@ -30,7 +29,6 @@ const StudentGrades = () => {
                 { name: "Mathematics", ca: 25, exam: 60, total: 85, grade: "A", remark: "Excellent" },
                 { name: "English", ca: 22, exam: 55, total: 77, grade: "B", remark: "Good" },
                 { name: "Science", ca: 20, exam: 50, total: 70, grade: "B", remark: "Good" },
-                { name: "Social Studies", ca: 18, exam: 45, total: 63, grade: "C  remark: 'Good" },
                 { name: "Social Studies", ca: 18, exam: 45, total: 63, grade: "C", remark: "Average" },
                 { name: "Civic Education", ca: 24, exam: 58, total: 82, grade: "A", remark: "Excellent" },
               ],
@@ -50,10 +48,7 @@ const StudentGrades = () => {
               average: 80.4,
               position: "3rd",
               classAverage: 70.5,
-              cumulative: {
-                total: 155.8,
-                average: 77.9,
-              },
+              cumulative: { average: 77.9 },
             },
             {
               term: 3,
@@ -67,10 +62,7 @@ const StudentGrades = () => {
               average: 83.8,
               position: "2nd",
               classAverage: 72.1,
-              cumulative: {
-                total: 239.6,
-                average: 79.9,
-              },
+              cumulative: { average: 79.9 },
             },
           ],
         })
@@ -109,154 +101,175 @@ const StudentGrades = () => {
     )
   }
 
-  const termData = studentData.terms.find((term) => term.term === selectedTerm)
+  const termData = studentData.terms.find(term => term.term === selectedTerm)
 
   return (
-    <div>
-      <h1 className="text-2xl font-semibold text-gray-900">Student Grades</h1>
-      <p className="mt-1 text-sm text-gray-600">View your child's academic performance</p>
+    <div className="container mx-auto px-4 py-6">
+      <header className="mb-8">
+        <h1 className="text-2xl font-bold text-gray-900">Student Grades</h1>
+        <p className="mt-2 text-sm text-gray-600">View your child's academic performance</p>
+      </header>
 
-      <div className="mt-6 bg-white shadow overflow-hidden sm:rounded-lg">
-        <div className="px-4 py-5 sm:px-6">
-          <h3 className="text-lg leading-6 font-medium text-gray-900">Student Information</h3>
-        </div>
-        <div className="border-t border-gray-200">
-          <dl>
-            <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-              <dt className="text-sm font-medium text-gray-500">Full name</dt>
-              <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{studentData.name}</dd>
-            </div>
-            <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-              <dt className="text-sm font-medium text-gray-500">Class</dt>
-              <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{studentData.class}</dd>
-            </div>
-            <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-              <dt className="text-sm font-medium text-gray-500">Admission Number</dt>
-              <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{studentData.admissionNumber}</dd>
-            </div>
-          </dl>
-        </div>
-      </div>
+      <StudentInfoCard 
+        name={studentData.name}
+        className={studentData.class}
+        admissionNumber={studentData.admissionNumber}
+      />
 
-      <div className="mt-6 bg-white shadow overflow-hidden sm:rounded-lg">
-        <div className="px-4 py-5 sm:px-6 flex justify-between items-center">
-          <h3 className="text-lg leading-6 font-medium text-gray-900">Academic Performance</h3>
-          <div>
-            <select
-              value={selectedTerm}
-              onChange={(e) => setSelectedTerm(Number.parseInt(e.target.value, 10))}
-              className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-            >
-              <option value={1}>First Term</option>
-              <option value={2}>Second Term</option>
-              <option value={3}>Third Term</option>
-            </select>
-          </div>
-        </div>
-
-        {termData && (
-          <>
-            <div className="border-t border-gray-200">
-              <div className="px-4 py-5 sm:px-6">
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-                  <div className="bg-gray-50 p-3 rounded-lg">
-                    <p className="text-sm text-gray-500">Term Average</p>
-                    <p className="text-xl font-semibold">{termData.average}%</p>
-                  </div>
-                  <div className="bg-gray-50 p-3 rounded-lg">
-                    <p className="text-sm text-gray-500">Position in Class</p>
-                    <p className="text-xl font-semibold">{termData.position}</p>
-                  </div>
-                  <div className="bg-gray-50 p-3 rounded-lg">
-                    <p className="text-sm text-gray-500">Class Average</p>
-                    <p className="text-xl font-semibold">{termData.classAverage}%</p>
-                  </div>
-                  {termData.cumulative && (
-                    <div className="bg-gray-50 p-3 rounded-lg">
-                      <p className="text-sm text-gray-500">Cumulative Average</p>
-                      <p className="text-xl font-semibold">{termData.cumulative.average}%</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th
-                      scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      Subject
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      C.A. (30)
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      Exam (70)
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      Total (100)
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      Grade
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      Remark
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {termData.subjects.map((subject, index) => (
-                    <tr key={index}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{subject.name}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{subject.ca}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{subject.exam}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{subject.total}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span
-                          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            subject.grade === "A"
-                              ? "bg-green-100 text-green-800"
-                              : subject.grade === "B"
-                                ? "bg-blue-100 text-blue-800"
-                                : subject.grade === "C"
-                                  ? "bg-yellow-100 text-yellow-800"
-                                  : subject.grade === "D"
-                                    ? "bg-orange-100 text-orange-800"
-                                    : "bg-red-100 text-red-800"
-                          }`}
-                        >
-                          {subject.grade}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{subject.remark}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </>
-        )}
-      </div>
+      <AcademicPerformance 
+        terms={studentData.terms}
+        selectedTerm={selectedTerm}
+        onTermChange={setSelectedTerm}
+      />
     </div>
+  )
+}
+
+// Sub-components
+const StudentInfoCard = ({ name, className, admissionNumber }) => (
+  <div className="bg-white shadow overflow-hidden rounded-lg mb-6">
+    <div className="px-4 py-5 sm:px-6">
+      <h3 className="text-lg font-medium text-gray-900">Student Information</h3>
+    </div>
+    <div className="border-t border-gray-200">
+      <InfoRow label="Full name" value={name} />
+      <InfoRow label="Class" value={className} bgGray />
+      <InfoRow label="Admission Number" value={admissionNumber} />
+    </div>
+  </div>
+)
+
+const InfoRow = ({ label, value, bgGray = false }) => (
+  <div className={`px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 ${bgGray ? 'bg-gray-50' : 'bg-white'}`}>
+    <dt className="text-sm font-medium text-gray-500">{label}</dt>
+    <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{value}</dd>
+  </div>
+)
+
+const AcademicPerformance = ({ terms, selectedTerm, onTermChange }) => {
+  const termData = terms.find(term => term.term === selectedTerm)
+
+  return (
+    <div className="bg-white shadow overflow-hidden rounded-lg">
+      <div className="px-4 py-5 sm:px-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <h3 className="text-lg font-medium text-gray-900">Academic Performance</h3>
+        <TermSelector 
+          selectedTerm={selectedTerm}
+          onTermChange={onTermChange}
+        />
+      </div>
+
+      {termData && (
+        <>
+          <PerformanceStats 
+            average={termData.average}
+            position={termData.position}
+            classAverage={termData.classAverage}
+            cumulative={termData.cumulative}
+          />
+          
+          <GradesTable subjects={termData.subjects} />
+        </>
+      )}
+    </div>
+  )
+}
+
+const TermSelector = ({ selectedTerm, onTermChange }) => (
+  <select
+    value={selectedTerm}
+    onChange={(e) => onTermChange(Number(e.target.value))}
+    className="block w-full sm:w-auto py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+  >
+    <option value={1}>First Term</option>
+    <option value={2}>Second Term</option>
+    <option value={3}>Third Term</option>
+  </select>
+)
+
+const PerformanceStats = ({ average, position, classAverage, cumulative }) => (
+  <div className="border-t border-gray-200 px-4 py-5 sm:px-6">
+    <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <StatCard label="Term Average" value={`${average}%`} />
+      <StatCard label="Position in Class" value={position} />
+      <StatCard label="Class Average" value={`${classAverage}%`} />
+      {cumulative && (
+        <StatCard label="Cumulative Average" value={`${cumulative.average}%`} />
+      )}
+    </div>
+  </div>
+)
+
+const StatCard = ({ label, value }) => (
+  <div className="bg-gray-50 p-3 rounded-lg">
+    <p className="text-sm text-gray-500">{label}</p>
+    <p className="text-xl font-semibold">{value}</p>
+  </div>
+)
+
+const GradesTable = ({ subjects }) => (
+  <div className="overflow-x-auto">
+    <table className="min-w-full divide-y divide-gray-200">
+      <thead className="bg-gray-50">
+        <tr>
+          <TableHeader>Subject</TableHeader>
+          <TableHeader>C.A. (30)</TableHeader>
+          <TableHeader>Exam (70)</TableHeader>
+          <TableHeader>Total (100)</TableHeader>
+          <TableHeader>Grade</TableHeader>
+          <TableHeader>Remark</TableHeader>
+        </tr>
+      </thead>
+      <tbody className="bg-white divide-y divide-gray-200">
+        {subjects.map((subject, index) => (
+          <SubjectRow key={index} subject={subject} />
+        ))}
+      </tbody>
+    </table>
+  </div>
+)
+
+const TableHeader = ({ children }) => (
+  <th
+    scope="col"
+    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+  >
+    {children}
+  </th>
+)
+
+const SubjectRow = ({ subject }) => (
+  <tr>
+    <TableCell className="font-medium">{subject.name}</TableCell>
+    <TableCell>{subject.ca}</TableCell>
+    <TableCell>{subject.exam}</TableCell>
+    <TableCell>{subject.total}</TableCell>
+    <TableCell>
+      <GradeBadge grade={subject.grade} />
+    </TableCell>
+    <TableCell>{subject.remark}</TableCell>
+  </tr>
+)
+
+const TableCell = ({ children, className = "" }) => (
+  <td className={`px-6 py-4 whitespace-nowrap text-sm ${className}`}>
+    {children}
+  </td>
+)
+
+const GradeBadge = ({ grade }) => {
+  const colorClasses = {
+    A: "bg-green-100 text-green-800",
+    B: "bg-blue-100 text-blue-800",
+    C: "bg-yellow-100 text-yellow-800",
+    D: "bg-orange-100 text-orange-800",
+    F: "bg-red-100 text-red-800"
+  }
+
+  return (
+    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${colorClasses[grade]}`}>
+      {grade}
+    </span>
   )
 }
 
