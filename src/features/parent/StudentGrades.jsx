@@ -1,10 +1,9 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useSelector } from "react-redux"
+import { Award, BookOpen, TrendingUp, User, Hash, GraduationCap, Trophy, Target, BarChart3, Star, ChevronDown, Calendar, Medal, Zap } from "lucide-react"
 
 const StudentGrades = () => {
-  const { user } = useSelector((state) => state.auth)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [studentData, setStudentData] = useState(null)
@@ -13,10 +12,8 @@ const StudentGrades = () => {
   useEffect(() => {
     const fetchStudentData = async () => {
       try {
-        // Simulate API call
         await new Promise(resolve => setTimeout(resolve, 1000))
         
-        // Mock data
         setStudentData({
           id: 1,
           name: "Tadese Maryam",
@@ -75,28 +72,50 @@ const StudentGrades = () => {
     }
 
     fetchStudentData()
-  }, [user])
+  }, [])
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+      <div className="min-h-screen bg-gradient-to-br from-violet-50 via-purple-50 to-indigo-50 flex items-center justify-center">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="relative">
+            <div className="w-16 h-16 border-4 border-purple-200 rounded-full animate-spin"></div>
+            <div className="w-16 h-16 border-4 border-purple-600 border-t-transparent rounded-full animate-spin absolute top-0 left-0"></div>
+          </div>
+          <p className="text-slate-600 font-medium">Loading academic records...</p>
+        </div>
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="bg-red-50 border-l-4 border-red-500 p-4">
-        <p className="text-sm text-red-700">{error}</p>
+      <div className="min-h-screen bg-gradient-to-br from-violet-50 via-purple-50 to-indigo-50 flex items-center justify-center">
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8 max-w-md">
+          <div className="text-center">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <BookOpen className="w-8 h-8 text-red-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-slate-800 mb-2">Unable to Load Data</h3>
+            <p className="text-slate-600">{error}</p>
+          </div>
+        </div>
       </div>
     )
   }
 
   if (!studentData) {
     return (
-      <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4">
-        <p className="text-sm text-yellow-700">No student data available.</p>
+      <div className="min-h-screen bg-gradient-to-br from-violet-50 via-purple-50 to-indigo-50 flex items-center justify-center">
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8 max-w-md">
+          <div className="text-center">
+            <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <BookOpen className="w-8 h-8 text-yellow-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-slate-800 mb-2">No Data Available</h3>
+            <p className="text-slate-600">Student academic records are not available at this time.</p>
+          </div>
+        </div>
       </div>
     )
   }
@@ -104,171 +123,331 @@ const StudentGrades = () => {
   const termData = studentData.terms.find(term => term.term === selectedTerm)
 
   return (
-    <div className="container mx-auto px-4 py-6">
-      <header className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Student Grades</h1>
-        <p className="mt-2 text-sm text-gray-600">View your child's academic performance</p>
-      </header>
+    <div className="min-h-screen bg-gradient-to-br from-violet-50 via-purple-50 to-indigo-50">
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        {/* Header */}
+        <div className="mb-8 animate-fade-in">
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="w-12 h-12 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+              <Award className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
+                Academic Performance
+              </h1>
+              <p className="text-slate-500 font-medium">Track academic progress and achievements</p>
+            </div>
+          </div>
+        </div>
 
-      <StudentInfoCard 
-        name={studentData.name}
-        className={studentData.class}
-        admissionNumber={studentData.admissionNumber}
-      />
+        <StudentProfileCard 
+          name={studentData.name}
+          className={studentData.class}
+          admissionNumber={studentData.admissionNumber}
+        />
 
-      <AcademicPerformance 
-        terms={studentData.terms}
-        selectedTerm={selectedTerm}
-        onTermChange={setSelectedTerm}
-      />
+        <AcademicDashboard 
+          terms={studentData.terms}
+          selectedTerm={selectedTerm}
+          onTermChange={setSelectedTerm}
+          termData={termData}
+        />
+      </div>
     </div>
   )
 }
 
-// Sub-components
-const StudentInfoCard = ({ name, className, admissionNumber }) => (
-  <div className="bg-white shadow overflow-hidden rounded-lg mb-6">
-    <div className="px-4 py-5 sm:px-6">
-      <h3 className="text-lg font-medium text-gray-900">Student Information</h3>
-    </div>
-    <div className="border-t border-gray-200">
-      <InfoRow label="Full name" value={name} />
-      <InfoRow label="Class" value={className} bgGray />
-      <InfoRow label="Admission Number" value={admissionNumber} />
+const StudentProfileCard = ({ name, className, admissionNumber }) => (
+  <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8 mb-8 hover:shadow-2xl transition-all duration-300">
+    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+      <div className="flex items-center space-x-6">
+        <div className="w-20 h-20 bg-gradient-to-r from-emerald-400 via-cyan-400 to-blue-400 rounded-full flex items-center justify-center shadow-lg">
+          <User className="w-10 h-10 text-white" />
+        </div>
+        <div>
+          <h2 className="text-2xl font-bold text-slate-800 mb-2">{name}</h2>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+            <div className="flex items-center space-x-2 text-slate-600">
+              <GraduationCap className="w-5 h-5" />
+              <span className="font-semibold">{className}</span>
+            </div>
+            <div className="flex items-center space-x-2 text-slate-600">
+              <Hash className="w-5 h-5" />
+              <span className="font-semibold">{admissionNumber}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div className="flex items-center space-x-4">
+        <div className="text-center">
+          <div className="w-12 h-12 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-xl flex items-center justify-center shadow-lg mb-2">
+            <Star className="w-6 h-6 text-white" />
+          </div>
+          <p className="text-xs font-medium text-slate-600">Honor Student</p>
+        </div>
+      </div>
     </div>
   </div>
 )
 
-const InfoRow = ({ label, value, bgGray = false }) => (
-  <div className={`px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 ${bgGray ? 'bg-gray-50' : 'bg-white'}`}>
-    <dt className="text-sm font-medium text-gray-500">{label}</dt>
-    <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{value}</dd>
-  </div>
-)
-
-const AcademicPerformance = ({ terms, selectedTerm, onTermChange }) => {
-  const termData = terms.find(term => term.term === selectedTerm)
-
-  return (
-    <div className="bg-white shadow overflow-hidden rounded-lg">
-      <div className="px-4 py-5 sm:px-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h3 className="text-lg font-medium text-gray-900">Academic Performance</h3>
-        <TermSelector 
-          selectedTerm={selectedTerm}
-          onTermChange={onTermChange}
-        />
+const AcademicDashboard = ({ terms, selectedTerm, onTermChange, termData }) => (
+  <div className="space-y-8">
+    {/* Term Selector & Performance Overview */}
+    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 overflow-hidden">
+      <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-6 text-white">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h3 className="text-2xl font-bold">Academic Overview</h3>
+            <p className="text-purple-100 font-medium">Performance metrics and insights</p>
+          </div>
+          <TermSelectorModern 
+            selectedTerm={selectedTerm}
+            onTermChange={onTermChange}
+          />
+        </div>
       </div>
 
       {termData && (
-        <>
-          <PerformanceStats 
+        <div className="p-6">
+          <PerformanceMetrics 
             average={termData.average}
             position={termData.position}
             classAverage={termData.classAverage}
             cumulative={termData.cumulative}
           />
-          
-          <GradesTable subjects={termData.subjects} />
-        </>
+        </div>
+      )}
+    </div>
+
+    {/* Subjects Performance */}
+    {termData && (
+      <>
+        <SubjectPerformanceChart subjects={termData.subjects} />
+        <DetailedGradesTable subjects={termData.subjects} />
+      </>
+    )}
+  </div>
+)
+
+const TermSelectorModern = ({ selectedTerm, onTermChange }) => (
+  <div className="relative">
+    <select
+      value={selectedTerm}
+      onChange={(e) => onTermChange(Number(e.target.value))}
+      className="appearance-none bg-white/20 border border-white/30 rounded-xl px-4 py-3 pr-10 text-white font-semibold focus:outline-none focus:ring-2 focus:ring-white/50 cursor-pointer hover:bg-white/30 transition-all"
+    >
+      <option value={1} className="text-slate-800">First Term</option>
+      <option value={2} className="text-slate-800">Second Term</option>
+      <option value={3} className="text-slate-800">Third Term</option>
+    </select>
+    <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-white pointer-events-none" />
+  </div>
+)
+
+const PerformanceMetrics = ({ average, position, classAverage, cumulative }) => (
+  <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+    <MetricCard 
+      icon={<TrendingUp className="w-6 h-6" />}
+      label="Term Average" 
+      value={`${average}%`} 
+      color="emerald"
+      trend="up"
+    />
+    <MetricCard 
+      icon={<Trophy className="w-6 h-6" />}
+      label="Class Position" 
+      value={position} 
+      color="yellow"
+      highlight={true}
+    />
+    <MetricCard 
+      icon={<Target className="w-6 h-6" />}
+      label="Class Average" 
+      value={`${classAverage}%`} 
+      color="blue"
+    />
+    {cumulative && (
+      <MetricCard 
+        icon={<Medal className="w-6 h-6" />}
+        label="Cumulative Average" 
+        value={`${cumulative.average}%`} 
+        color="purple"
+        trend="up"
+      />
+    )}
+  </div>
+)
+
+const MetricCard = ({ icon, label, value, color, highlight = false, trend }) => {
+  const colors = {
+    emerald: "from-emerald-500 to-emerald-600",
+    yellow: "from-yellow-500 to-yellow-600",
+    blue: "from-blue-500 to-blue-600",
+    purple: "from-purple-500 to-purple-600"
+  }
+
+  return (
+    <div className={`relative p-6 rounded-xl bg-gradient-to-br ${colors[color]} text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 ${highlight ? 'ring-2 ring-white/50' : ''}`}>
+      <div className="flex items-center justify-between">
+        <div className="space-y-2">
+          <p className="text-white/80 text-sm font-medium">{label}</p>
+          <p className="text-2xl font-bold">{value}</p>
+        </div>
+        <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+          {icon}
+        </div>
+      </div>
+      {trend && (
+        <div className="absolute -top-2 -right-2 w-6 h-6 bg-white rounded-full flex items-center justify-center">
+          <TrendingUp className="w-3 h-3 text-emerald-600" />
+        </div>
+      )}
+      {highlight && (
+        <div className="absolute -top-2 -right-2 w-6 h-6 bg-white rounded-full flex items-center justify-center">
+          <Zap className="w-3 h-3 text-yellow-600" />
+        </div>
       )}
     </div>
   )
 }
 
-const TermSelector = ({ selectedTerm, onTermChange }) => (
-  <select
-    value={selectedTerm}
-    onChange={(e) => onTermChange(Number(e.target.value))}
-    className="block w-full sm:w-auto py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-  >
-    <option value={1}>First Term</option>
-    <option value={2}>Second Term</option>
-    <option value={3}>Third Term</option>
-  </select>
-)
-
-const PerformanceStats = ({ average, position, classAverage, cumulative }) => (
-  <div className="border-t border-gray-200 px-4 py-5 sm:px-6">
-    <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-      <StatCard label="Term Average" value={`${average}%`} />
-      <StatCard label="Position in Class" value={position} />
-      <StatCard label="Class Average" value={`${classAverage}%`} />
-      {cumulative && (
-        <StatCard label="Cumulative Average" value={`${cumulative.average}%`} />
-      )}
+const SubjectPerformanceChart = ({ subjects }) => (
+  <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8">
+    <div className="flex items-center space-x-3 mb-8">
+      <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center">
+        <BarChart3 className="w-5 h-5 text-white" />
+      </div>
+      <h3 className="text-xl font-bold text-slate-800">Subject Performance Overview</h3>
+    </div>
+    
+    <div className="space-y-4">
+      {subjects.map((subject, index) => (
+        <SubjectPerformanceBar key={index} subject={subject} />
+      ))}
     </div>
   </div>
 )
 
-const StatCard = ({ label, value }) => (
-  <div className="bg-gray-50 p-3 rounded-lg">
-    <p className="text-sm text-gray-500">{label}</p>
-    <p className="text-xl font-semibold">{value}</p>
+const SubjectPerformanceBar = ({ subject }) => (
+  <div className="space-y-2">
+    <div className="flex justify-between items-center">
+      <span className="font-semibold text-slate-700">{subject.name}</span>
+      <div className="flex items-center space-x-2">
+        <GradeBadgeModern grade={subject.grade} />
+        <span className="text-sm font-bold text-slate-600">{subject.total}%</span>
+      </div>
+    </div>
+    <div className="w-full bg-slate-200 rounded-full h-3">
+      <div
+        className={`h-3 rounded-full transition-all duration-1000 ${
+          subject.total >= 80 ? "bg-gradient-to-r from-emerald-400 to-emerald-500" :
+          subject.total >= 70 ? "bg-gradient-to-r from-blue-400 to-blue-500" :
+          subject.total >= 60 ? "bg-gradient-to-r from-yellow-400 to-yellow-500" :
+          "bg-gradient-to-r from-red-400 to-red-500"
+        }`}
+        style={{ width: `${subject.total}%` }}
+      />
+    </div>
   </div>
 )
 
-const GradesTable = ({ subjects }) => (
-  <div className="overflow-x-auto">
-    <table className="min-w-full divide-y divide-gray-200">
-      <thead className="bg-gray-50">
-        <tr>
-          <TableHeader>Subject</TableHeader>
-          <TableHeader>C.A. (30)</TableHeader>
-          <TableHeader>Exam (70)</TableHeader>
-          <TableHeader>Total (100)</TableHeader>
-          <TableHeader>Grade</TableHeader>
-          <TableHeader>Remark</TableHeader>
-        </tr>
-      </thead>
-      <tbody className="bg-white divide-y divide-gray-200">
-        {subjects.map((subject, index) => (
-          <SubjectRow key={index} subject={subject} />
-        ))}
-      </tbody>
-    </table>
+const DetailedGradesTable = ({ subjects }) => (
+  <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 overflow-hidden">
+    <div className="p-6 border-b border-slate-200">
+      <h3 className="text-xl font-bold text-slate-800">Detailed Academic Record</h3>
+      <p className="text-slate-500">Complete breakdown of academic performance</p>
+    </div>
+    
+    <div className="overflow-x-auto">
+      <table className="w-full">
+        <thead className="bg-gradient-to-r from-slate-50 to-slate-100">
+          <tr>
+            <th className="px-6 py-4 text-left text-sm font-bold text-slate-700">Subject</th>
+            <th className="px-6 py-4 text-center text-sm font-bold text-slate-700">C.A. (30)</th>
+            <th className="px-6 py-4 text-center text-sm font-bold text-slate-700">Exam (70)</th>
+            <th className="px-6 py-4 text-center text-sm font-bold text-slate-700">Total (100)</th>
+            <th className="px-6 py-4 text-center text-sm font-bold text-slate-700">Grade</th>
+            <th className="px-6 py-4 text-left text-sm font-bold text-slate-700">Remark</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-slate-100">
+          {subjects.map((subject, index) => (
+            <SubjectRowModern key={index} subject={subject} />
+          ))}
+        </tbody>
+      </table>
+    </div>
   </div>
 )
 
-const TableHeader = ({ children }) => (
-  <th
-    scope="col"
-    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-  >
-    {children}
-  </th>
-)
-
-const SubjectRow = ({ subject }) => (
-  <tr>
-    <TableCell className="font-medium">{subject.name}</TableCell>
-    <TableCell>{subject.ca}</TableCell>
-    <TableCell>{subject.exam}</TableCell>
-    <TableCell>{subject.total}</TableCell>
-    <TableCell>
-      <GradeBadge grade={subject.grade} />
-    </TableCell>
-    <TableCell>{subject.remark}</TableCell>
+const SubjectRowModern = ({ subject }) => (
+  <tr className="hover:bg-slate-50/50 transition-colors">
+    <td className="px-6 py-4">
+      <div className="flex items-center space-x-3">
+        <div className="w-8 h-8 bg-gradient-to-r from-indigo-400 to-purple-400 rounded-lg flex items-center justify-center">
+          <BookOpen className="w-4 h-4 text-white" />
+        </div>
+        <span className="font-semibold text-slate-800">{subject.name}</span>
+      </div>
+    </td>
+    <td className="px-6 py-4 text-center">
+      <ScoreDisplay score={subject.ca} max={30} />
+    </td>
+    <td className="px-6 py-4 text-center">
+      <ScoreDisplay score={subject.exam} max={70} />
+    </td>
+    <td className="px-6 py-4 text-center">
+      <div className="font-bold text-lg text-slate-800">{subject.total}</div>
+    </td>
+    <td className="px-6 py-4 text-center">
+      <GradeBadgeModern grade={subject.grade} />
+    </td>
+    <td className="px-6 py-4">
+      <RemarkBadge remark={subject.remark} />
+    </td>
   </tr>
 )
 
-const TableCell = ({ children, className = "" }) => (
-  <td className={`px-6 py-4 whitespace-nowrap text-sm ${className}`}>
-    {children}
-  </td>
+const ScoreDisplay = ({ score, max }) => (
+  <div className="text-center">
+    <div className="font-semibold text-slate-700">{score}</div>
+    <div className="text-xs text-slate-400">/ {max}</div>
+  </div>
 )
 
-const GradeBadge = ({ grade }) => {
-  const colorClasses = {
-    A: "bg-green-100 text-green-800",
-    B: "bg-blue-100 text-blue-800",
-    C: "bg-yellow-100 text-yellow-800",
-    D: "bg-orange-100 text-orange-800",
-    F: "bg-red-100 text-red-800"
+const GradeBadgeModern = ({ grade }) => {
+  const gradeConfig = {
+    A: { color: "from-emerald-500 to-emerald-600", textColor: "text-white", icon: <Star className="w-3 h-3" /> },
+    B: { color: "from-blue-500 to-blue-600", textColor: "text-white", icon: <Award className="w-3 h-3" /> },
+    C: { color: "from-yellow-500 to-yellow-600", textColor: "text-white", icon: <Medal className="w-3 h-3" /> },
+    D: { color: "from-orange-500 to-orange-600", textColor: "text-white", icon: <Trophy className="w-3 h-3" /> },
+    F: { color: "from-red-500 to-red-600", textColor: "text-white", icon: <Target className="w-3 h-3" /> }
   }
 
+  const config = gradeConfig[grade] || gradeConfig.F
+
   return (
-    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${colorClasses[grade]}`}>
-      {grade}
+    <div className={`inline-flex items-center space-x-1 px-3 py-1 rounded-full bg-gradient-to-r ${config.color} ${config.textColor} font-bold text-sm shadow-lg`}>
+      {config.icon}
+      <span>{grade}</span>
+    </div>
+  )
+}
+
+const RemarkBadge = ({ remark }) => {
+  const remarkConfig = {
+    "Excellent": { color: "bg-emerald-100 text-emerald-700 border-emerald-200" },
+    "Good": { color: "bg-blue-100 text-blue-700 border-blue-200" },
+    "Average": { color: "bg-yellow-100 text-yellow-700 border-yellow-200" },
+    "Poor": { color: "bg-red-100 text-red-700 border-red-200" }
+  }
+
+  const config = remarkConfig[remark] || remarkConfig["Average"]
+
+  return (
+    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${config.color}`}>
+      {remark}
     </span>
   )
 }

@@ -1,8 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { Calendar, Check, X } from "lucide-react"
-import { toast } from "react-toastify"
+import { Calendar, Check, X, Users, Clock, CheckCircle2, XCircle } from "lucide-react"
 
 // Mock API services
 const AttendanceService = {
@@ -21,8 +20,8 @@ const AttendanceService = {
       resolve(Array.from({ length: 10 }, (_, i) => ({
         id: i + 1,
         name: `Student ${i + 1}`,
-        admissionNumber: `STD${classId}${i + 1}`,
-        present: Math.random() > 0.2
+        admissionNumber: `STD${classId}${String(i + 1).padStart(3, '0')}`,
+        present: Math.random() > 0.3
       })))
     }, 500)
   }),
@@ -51,7 +50,6 @@ const AttendanceRecords = () => {
         setClasses(data.classes)
       } catch (error) {
         console.error("Failed to load classes:", error)
-        toast.error("Failed to load classes")
       }
     }
     loadClasses()
@@ -70,7 +68,6 @@ const AttendanceRecords = () => {
       setStudents(studentsData)
     } catch (error) {
       console.error("Failed to load students:", error)
-      toast.error("Failed to load students")
     } finally {
       setIsLoading(false)
     }
@@ -90,10 +87,7 @@ const AttendanceRecords = () => {
 
   // Save attendance records
   const handleSaveAttendance = useCallback(async () => {
-    if (!selectedClass || !selectedDate) {
-      toast.error("Please select both class and date")
-      return
-    }
+    if (!selectedClass || !selectedDate) return
 
     setIsSaving(true)
     try {
@@ -105,70 +99,117 @@ const AttendanceRecords = () => {
           present: student.present
         }))
       })
-      toast.success("Attendance saved successfully")
     } catch (error) {
       console.error("Failed to save attendance:", error)
-      toast.error("Failed to save attendance")
     } finally {
       setIsSaving(false)
     }
   }, [selectedClass, selectedDate, students])
 
+  const presentCount = students.filter(s => s.present).length
+  const absentCount = students.length - presentCount
+
   return (
-    <div className="container mx-auto px-4 py-6">
-      <header className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Attendance Records</h1>
-        <p className="mt-2 text-sm text-gray-600">
-          Track and manage student attendance
-        </p>
-      </header>
-
-      <AttendanceFilters
-        classes={classes}
-        selectedClass={selectedClass}
-        selectedDate={selectedDate}
-        onClassChange={handleClassChange}
-        onDateChange={setSelectedDate}
-      />
-
-      {isLoading ? (
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+    <div className="min-h-screen bg-slate-50">
+      <div className="max-w-7xl mx-auto px-6 py-12">
+        {/* Header */}
+        <div className="mb-12">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center">
+              <Users className="w-5 h-5 text-indigo-600" />
+            </div>
+            <h1 className="text-3xl font-light text-slate-900">Attendance</h1>
+          </div>
+          <p className="text-slate-600 ml-13">Track and manage student attendance with ease</p>
         </div>
-      ) : selectedClass ? (
-        students.length > 0 ? (
-          <AttendanceTable
-            students={students}
-            date={selectedDate}
-            onToggle={toggleAttendance}
-            onMarkAllPresent={markAllPresent}
-            onSave={handleSaveAttendance}
-            isSaving={isSaving}
+
+        {/* Filters */}
+        <AttendanceFilters
+          classes={classes}
+          selectedClass={selectedClass}
+          selectedDate={selectedDate}
+          onClassChange={handleClassChange}
+          onDateChange={setSelectedDate}
+        />
+
+        {/* Loading State */}
+        {isLoading && (
+          <div className="flex items-center justify-center py-24">
+            <div className="flex items-center gap-3 text-slate-600">
+              <div className="w-5 h-5 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
+              <span className="text-sm">Loading students...</span>
+            </div>
+          </div>
+        )}
+
+        {/* Content */}
+        {!isLoading && selectedClass && students.length > 0 && (
+          <>
+            {/* Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <StatCard
+                icon={Users}
+                label="Total Students"
+                value={students.length}
+                color="slate"
+              />
+              <StatCard
+                icon={CheckCircle2}
+                label="Present"
+                value={presentCount}
+                color="emerald"
+              />
+              <StatCard
+                icon={XCircle}
+                label="Absent"
+                value={absentCount}
+                color="rose"
+              />
+            </div>
+
+            {/* Attendance Table */}
+            <AttendanceTable
+              students={students}
+              date={selectedDate}
+              onToggle={toggleAttendance}
+              onMarkAllPresent={markAllPresent}
+              onSave={handleSaveAttendance}
+              isSaving={isSaving}
+            />
+          </>
+        )}
+
+        {/* Empty States */}
+        {!isLoading && !selectedClass && (
+          <EmptyState 
+            icon={Calendar}
+            title="Select a Class"
+            message="Choose a class from the dropdown above to view attendance records"
           />
-        ) : (
-          <EmptyState message="No students found for this class." />
-        )
-      ) : (
-        <EmptyState message="Please select a class to view attendance." />
-      )}
+        )}
+
+        {!isLoading && selectedClass && students.length === 0 && (
+          <EmptyState 
+            icon={Users}
+            title="No Students Found"
+            message="This class doesn't have any students enrolled"
+          />
+        )}
+      </div>
     </div>
   )
 }
 
-// Sub-components
+// Components
 const AttendanceFilters = ({ classes, selectedClass, selectedDate, onClassChange, onDateChange }) => (
-  <div className="bg-white rounded-lg shadow p-6 mb-6">
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div>
-        <label htmlFor="class-select" className="block text-sm font-medium text-gray-700 mb-2">
-          Select Class
-        </label>
+  <div className="bg-white rounded-2xl border border-slate-200/60 p-8 mb-8 shadow-sm">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="space-y-3">
+        <label className="text-sm font-medium text-slate-700">Class</label>
         <select
-          id="class-select"
-          className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors"
+          className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:bg-white focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100 transition-all duration-200 appearance-none cursor-pointer"
           value={selectedClass}
           onChange={(e) => onClassChange(e.target.value)}
-          aria-label="Select class"
         >
           <option value="">Select a class</option>
           {classes.map(cls => (
@@ -177,67 +218,110 @@ const AttendanceFilters = ({ classes, selectedClass, selectedDate, onClassChange
         </select>
       </div>
 
-      <div>
-        <label htmlFor="date-select" className="block text-sm font-medium text-gray-700 mb-2">
-          Select Date
-        </label>
+      <div className="space-y-3">
+        <label className="text-sm font-medium text-slate-700">Date</label>
         <input
-          id="date-select"
           type="date"
-          className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors"
+          className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:bg-white focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100 transition-all duration-200"
           value={selectedDate}
           onChange={(e) => onDateChange(e.target.value)}
           max={new Date().toISOString().split("T")[0]}
-          aria-label="Select date"
         />
       </div>
     </div>
   </div>
 )
 
-const AttendanceTable = ({ students, date, onToggle, onMarkAllPresent, onSave, isSaving }) => (
-  <div className="bg-white rounded-lg shadow overflow-hidden">
-    <div className="p-4 bg-blue-50 border-b border-blue-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-      <h2 className="text-lg font-semibold flex items-center">
-        <Calendar size={20} className="mr-2 text-blue-600" />
-        Attendance for {date}
-      </h2>
+const StatCard = ({ icon: Icon, label, value, color }) => {
+  const colorClasses = {
+    slate: "bg-slate-50 text-slate-600 border-slate-200",
+    emerald: "bg-emerald-50 text-emerald-600 border-emerald-200",
+    rose: "bg-rose-50 text-rose-600 border-rose-200"
+  }
 
-      <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-        <button
-          onClick={onMarkAllPresent}
-          className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md text-sm transition-colors"
-          aria-label="Mark all students present"
-        >
-          Mark All Present
-        </button>
-        <button
-          onClick={onSave}
-          disabled={isSaving}
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md disabled:opacity-50 transition-colors"
-          aria-label={isSaving ? "Saving attendance" : "Save attendance"}
-        >
-          {isSaving ? "Saving..." : "Save Attendance"}
-        </button>
+  return (
+    <div className="bg-white rounded-2xl border border-slate-200/60 p-6 shadow-sm">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm text-slate-600 mb-1">{label}</p>
+          <p className="text-2xl font-light text-slate-900">{value}</p>
+        </div>
+        <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${colorClasses[color]}`}>
+          <Icon className="w-6 h-6" />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+const AttendanceTable = ({ students, date, onToggle, onMarkAllPresent, onSave, isSaving }) => (
+  <div className="bg-white rounded-2xl border border-slate-200/60 overflow-hidden shadow-sm">
+    {/* Header */}
+    <div className="px-8 py-6 bg-slate-50/50 border-b border-slate-200/60">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <Calendar className="w-5 h-5 text-slate-500" />
+          <h2 className="text-lg font-medium text-slate-900">
+            {new Date(date).toLocaleDateString('en-US', { 
+              weekday: 'long', 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            })}
+          </h2>
+        </div>
+
+        <div className="flex gap-3">
+          <button
+            onClick={onMarkAllPresent}
+            className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-emerald-200"
+          >
+            Mark All Present
+          </button>
+          <button
+            onClick={onSave}
+            disabled={isSaving}
+            className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white text-sm font-medium rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-indigo-200 disabled:cursor-not-allowed"
+          >
+            {isSaving ? (
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Saving...
+              </div>
+            ) : (
+              "Save Attendance"
+            )}
+          </button>
+        </div>
       </div>
     </div>
 
+    {/* Table */}
     <div className="overflow-x-auto">
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
+      <table className="w-full">
+        <thead className="bg-slate-50/30">
           <tr>
-            <TableHeader>Student Name</TableHeader>
-            <TableHeader>Admission Number</TableHeader>
-            <TableHeader>Status</TableHeader>
-            <TableHeader align="right">Action</TableHeader>
+            <th className="px-8 py-4 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+              Student
+            </th>
+            <th className="px-6 py-4 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+              ID Number
+            </th>
+            <th className="px-6 py-4 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">
+              Status
+            </th>
+            <th className="px-8 py-4 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
+              Action
+            </th>
           </tr>
         </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
-          {students.map(student => (
+        <tbody className="divide-y divide-slate-100">
+          {students.map((student, index) => (
             <StudentRow
               key={student.id}
               student={student}
               onToggle={onToggle}
+              isLast={index === students.length - 1}
             />
           ))}
         </tbody>
@@ -246,59 +330,60 @@ const AttendanceTable = ({ students, date, onToggle, onMarkAllPresent, onSave, i
   </div>
 )
 
-const StudentRow = ({ student, onToggle }) => (
-  <tr>
-    <TableCell className="font-medium">{student.name}</TableCell>
-    <TableCell>{student.admissionNumber}</TableCell>
-    <TableCell>
+const StudentRow = ({ student, onToggle, isLast }) => (
+  <tr className="hover:bg-slate-50/50 transition-colors duration-150">
+    <td className="px-8 py-5">
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center">
+          <span className="text-sm font-medium text-slate-600">
+            {student.name.split(' ').map(n => n[0]).join('')}
+          </span>
+        </div>
+        <span className="text-sm font-medium text-slate-900">{student.name}</span>
+      </div>
+    </td>
+    <td className="px-6 py-5">
+      <span className="text-sm text-slate-600 font-mono">{student.admissionNumber}</span>
+    </td>
+    <td className="px-6 py-5 text-center">
       <StatusBadge present={student.present} />
-    </TableCell>
-    <TableCell align="right">
+    </td>
+    <td className="px-8 py-5 text-right">
       <button
         onClick={() => onToggle(student.id)}
-        className={`p-1.5 rounded-full transition-colors ${student.present
-            ? "bg-red-600 hover:bg-red-700 text-white"
-            : "bg-green-600 hover:bg-green-700 text-white"
-          }`}
-        aria-label={student.present ? "Mark student absent" : "Mark student present"}
+        className={`w-10 h-10 rounded-xl transition-all duration-200 hover:scale-105 ${
+          student.present
+            ? "bg-rose-100 hover:bg-rose-200 text-rose-600"
+            : "bg-emerald-100 hover:bg-emerald-200 text-emerald-600"
+        }`}
+        title={student.present ? "Mark absent" : "Mark present"}
       >
-        {student.present ? <X size={16} /> : <Check size={16} />}
+        {student.present ? <X className="w-4 h-4 mx-auto" /> : <Check className="w-4 h-4 mx-auto" />}
       </button>
-    </TableCell>
+    </td>
   </tr>
 )
 
 const StatusBadge = ({ present }) => (
-  <span
-    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${present ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-      }`}
-  >
+  <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium ${
+    present 
+      ? "bg-emerald-100 text-emerald-700" 
+      : "bg-rose-100 text-rose-700"
+  }`}>
+    <div className={`w-1.5 h-1.5 rounded-full ${
+      present ? "bg-emerald-500" : "bg-rose-500"
+    }`} />
     {present ? "Present" : "Absent"}
-  </span>
+  </div>
 )
 
-const TableHeader = ({ children, align = "left" }) => (
-  <th
-    scope="col"
-    className={`px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${align === "right" ? "text-right" : ""
-      }`}
-  >
-    {children}
-  </th>
-)
-
-const TableCell = ({ children, align = "left", className = "" }) => (
-  <td
-    className={`px-6 py-4 whitespace-nowrap text-sm ${align === "right" ? "text-right" : ""
-      } ${className}`}
-  >
-    {children}
-  </td>
-)
-
-const EmptyState = ({ message }) => (
-  <div className="bg-white p-8 rounded-lg shadow text-center">
-    <p className="text-gray-500">{message}</p>
+const EmptyState = ({ icon: Icon, title, message }) => (
+  <div className="bg-white rounded-2xl border border-slate-200/60 p-16 text-center shadow-sm">
+    <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+      <Icon className="w-8 h-8 text-slate-400" />
+    </div>
+    <h3 className="text-lg font-medium text-slate-900 mb-2">{title}</h3>
+    <p className="text-slate-600 max-w-md mx-auto">{message}</p>
   </div>
 )
 
