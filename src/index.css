@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-@theme {
+/* @theme {
   --color-primary: #2563EB;
   --color-secondary: #FBBF24;
 }
@@ -34,8 +34,8 @@
   
   h3 {
     @apply text-xl sm:text-2xl;
-  }
-}
+  } */
+/* } */
 
 /* @utility components {
   .btn {
