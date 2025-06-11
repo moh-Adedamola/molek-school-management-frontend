@@ -1,8 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { toast } from "react-toastify"
-import { Plus, Edit, Trash, Search, Users } from "lucide-react"
+import { Plus, Edit, Trash, Search, Users, BookOpen, GraduationCap, X } from "lucide-react"
 
 // Mock API call - replace with actual API call in production
 const fetchSubjectsData = () => {
@@ -108,7 +107,6 @@ const ManageSubjects = () => {
         setIsLoading(false)
       } catch (error) {
         console.error("Error loading subjects data:", error)
-        toast.error("Failed to load subjects data")
         setIsLoading(false)
       }
     }
@@ -128,7 +126,6 @@ const ManageSubjects = () => {
     const { name, value } = e.target
 
     if (name === "classIds") {
-      // Handle multiple select
       const selectedOptions = Array.from(e.target.selectedOptions, (option) => option.value)
       setAssignmentData({
         ...assignmentData,
@@ -165,14 +162,10 @@ const ManageSubjects = () => {
   const handleDeleteSubject = async (subjectId) => {
     if (window.confirm("Are you sure you want to delete this subject?")) {
       try {
-        // Mock API call - replace with actual API call in production
         await new Promise((resolve) => setTimeout(resolve, 500))
-
         setSubjects(subjects.filter((s) => s.id !== subjectId))
-        toast.success("Subject deleted successfully")
       } catch (error) {
         console.error("Error deleting subject:", error)
-        toast.error("Failed to delete subject")
       }
     }
   }
@@ -189,18 +182,14 @@ const ManageSubjects = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
 
-    // Basic validation
     if (!formData.name || !formData.code) {
-      toast.error("Please fill in all required fields")
       return
     }
 
     try {
-      // Mock API call - replace with actual API call in production
       await new Promise((resolve) => setTimeout(resolve, 1000))
 
       if (editingSubject) {
-        // Update existing subject
         const updatedSubjects = subjects.map((s) => {
           if (s.id === editingSubject.id) {
             return {
@@ -213,11 +202,9 @@ const ManageSubjects = () => {
           return s
         })
         setSubjects(updatedSubjects)
-        toast.success("Subject updated successfully")
       } else {
-        // Add new subject
         const newSubject = {
-          id: Date.now(), // Mock ID generation
+          id: Date.now(),
           name: formData.name,
           code: formData.code,
           description: formData.description,
@@ -225,45 +212,33 @@ const ManageSubjects = () => {
           assignedClasses: [],
         }
         setSubjects([...subjects, newSubject])
-        toast.success("Subject added successfully")
       }
 
       setShowForm(false)
     } catch (error) {
       console.error("Error saving subject:", error)
-      toast.error("Failed to save subject")
     }
   }
 
   const handleAssignmentSubmit = async (e) => {
     e.preventDefault()
 
-    if (!assignmentData.teacherId) {
-      toast.error("Please select a teacher")
-      return
-    }
-
-    if (assignmentData.classIds.length === 0) {
-      toast.error("Please select at least one class")
+    if (!assignmentData.teacherId || assignmentData.classIds.length === 0) {
       return
     }
 
     try {
-      // Mock API call - replace with actual API call in production
       await new Promise((resolve) => setTimeout(resolve, 1000))
 
       const selectedTeacher = teachers.find((t) => t.id.toString() === assignmentData.teacherId)
 
-      // Update subject with new assignment
       const updatedSubjects = subjects.map((s) => {
         if (s.id === currentSubject.id) {
-          // Add teacher if not already assigned
           const updatedTeachers = [...s.assignedTeachers]
           if (!updatedTeachers.includes(selectedTeacher.name)) {
             updatedTeachers.push(selectedTeacher.name)
           }
 
-          // Add classes if not already assigned
           const updatedClasses = [...s.assignedClasses]
           assignmentData.classIds.forEach((classId) => {
             const className = classes.find((c) => c.id.toString() === classId).name
@@ -282,11 +257,9 @@ const ManageSubjects = () => {
       })
 
       setSubjects(updatedSubjects)
-      toast.success("Teacher assigned successfully")
       setShowAssignmentModal(false)
     } catch (error) {
       console.error("Error assigning teacher:", error)
-      toast.error("Failed to assign teacher")
     }
   }
 
@@ -298,253 +271,328 @@ const ManageSubjects = () => {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="relative">
+            <div className="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto"></div>
+            <BookOpen className="w-6 h-6 text-indigo-600 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
+          </div>
+          <p className="mt-4 text-slate-600 font-medium">Loading subjects...</p>
+        </div>
       </div>
     )
   }
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Manage Subjects</h1>
-        <button
-          onClick={handleAddSubject}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center"
-        >
-          <Plus size={18} className="mr-1" />
-          Add Subject
-        </button>
-      </div>
-
-      {/* Search Bar */}
-      <div className="bg-white p-4 rounded-lg shadow mb-6">
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search size={18} className="text-gray-400" />
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="p-3 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl shadow-lg">
+                <BookOpen className="w-8 h-8 text-white" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-slate-900">Subject Management</h1>
+                <p className="text-slate-600 mt-1">Organize and manage academic subjects</p>
+              </div>
+            </div>
+            <button
+              onClick={handleAddSubject}
+              className="group relative bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center space-x-2"
+            >
+              <Plus size={20} />
+              <span>Add Subject</span>
+            </button>
           </div>
-          <input
-            type="text"
-            placeholder="Search subjects by name or code..."
-            className="pl-10 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
         </div>
-      </div>
 
-      {/* Subject Form */}
-      {showForm && (
-        <div className="bg-white p-4 rounded-lg shadow mb-6">
-          <h2 className="text-lg font-semibold mb-4">{editingSubject ? "Edit Subject" : "Add New Subject"}</h2>
+        {/* Search Bar */}
+        <div className="mb-8">
+          <div className="relative max-w-md">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <Search size={20} className="text-slate-400" />
+            </div>
+            <input
+              type="text"
+              placeholder="Search subjects..."
+              className="w-full pl-12 pr-4 py-3 bg-white/70 backdrop-blur-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 shadow-sm"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+        </div>
 
-          <form onSubmit={handleSubmit}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Subject Name <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  className="w-full p-2 border border-gray-300 rounded-md"
-                  required
-                />
+        {/* Subject Form */}
+        {showForm && (
+          <div className="mb-8 animate-fade-in">
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+              <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4">
+                <h2 className="text-xl font-semibold text-white">
+                  {editingSubject ? "Edit Subject" : "Create New Subject"}
+                </h2>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Subject Code <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="code"
-                  value={formData.code}
-                  onChange={handleInputChange}
-                  className="w-full p-2 border border-gray-300 rounded-md"
-                  required
-                />
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-slate-700">
+                      Subject Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                      placeholder="Enter subject name"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-slate-700">
+                      Subject Code <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="code"
+                      value={formData.code}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                      placeholder="e.g., MTH, ENG"
+                    />
+                  </div>
+                </div>
+
+                <div className="mb-6 space-y-2">
+                  <label className="block text-sm font-semibold text-slate-700">Description</label>
+                  <textarea
+                    name="description"
+                    value={formData.description}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 resize-none"
+                    rows="3"
+                    placeholder="Brief description of the subject"
+                  ></textarea>
+                </div>
+
+                <div className="flex justify-end space-x-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowForm(false)}
+                    className="px-6 py-3 border border-slate-300 rounded-xl text-slate-700 hover:bg-slate-50 transition-all duration-200 font-medium"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    onClick={handleSubmit} 
+                    className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 font-medium shadow-lg"
+                  >
+                    {editingSubject ? "Update Subject" : "Create Subject"}
+                  </button>
+                </div>
               </div>
             </div>
+          </div>
+        )}
 
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-              <textarea
-                name="description"
-                value={formData.description}
-                onChange={handleInputChange}
-                className="w-full p-2 border border-gray-300 rounded-md"
-                rows="3"
-              ></textarea>
-            </div>
-
-            <div className="flex justify-end space-x-2">
-              <button
-                type="button"
-                onClick={() => setShowForm(false)}
-                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+        {/* Subjects Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+          {filteredSubjects.length > 0 ? (
+            filteredSubjects.map((subject) => (
+              <div
+                key={subject.id}
+                className="group bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl border border-slate-200 overflow-hidden transition-all duration-300 hover:-translate-y-1"
               >
-                Cancel
-              </button>
-              <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-                {editingSubject ? "Update Subject" : "Add Subject"}
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
+                <div className="p-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-3 mb-2">
+                        <span className="inline-block px-3 py-1 bg-gradient-to-r from-indigo-100 to-purple-100 text-indigo-700 text-sm font-semibold rounded-full">
+                          {subject.code}
+                        </span>
+                      </div>
+                      <h3 className="text-xl font-bold text-slate-900 mb-2">{subject.name}</h3>
+                      <p className="text-slate-600 text-sm leading-relaxed">{subject.description}</p>
+                    </div>
+                  </div>
 
-      {/* Subjects Table */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Subject
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Code</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Assigned Teachers
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Assigned Classes
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredSubjects.length > 0 ? (
-                filteredSubjects.map((subject) => (
-                  <tr key={subject.id}>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{subject.name}</div>
-                      <div className="text-xs text-gray-500">{subject.description}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{subject.code}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="space-y-4 mb-6">
+                    <div>
+                      <div className="flex items-center space-x-2 mb-2">
+                        <GraduationCap size={16} className="text-slate-500" />
+                        <span className="text-sm font-semibold text-slate-700">Teachers</span>
+                      </div>
                       {subject.assignedTeachers.length > 0 ? (
-                        <div className="text-sm text-gray-900">{subject.assignedTeachers.join(", ")}</div>
+                        <div className="flex flex-wrap gap-1">
+                          {subject.assignedTeachers.map((teacher, index) => (
+                            <span
+                              key={index}
+                              className="inline-block px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full"
+                            >
+                              {teacher}
+                            </span>
+                          ))}
+                        </div>
                       ) : (
-                        <div className="text-sm text-gray-500">No teachers assigned</div>
+                        <span className="text-slate-400 text-sm">No teachers assigned</span>
                       )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    </div>
+
+                    <div>
+                      <div className="flex items-center space-x-2 mb-2">
+                        <Users size={16} className="text-slate-500" />
+                        <span className="text-sm font-semibold text-slate-700">Classes</span>
+                      </div>
                       {subject.assignedClasses.length > 0 ? (
-                        <div className="text-sm text-gray-900">{subject.assignedClasses.join(", ")}</div>
+                        <div className="flex flex-wrap gap-1">
+                          {subject.assignedClasses.map((cls, index) => (
+                            <span
+                              key={index}
+                              className="inline-block px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full"
+                            >
+                              {cls}
+                            </span>
+                          ))}
+                        </div>
                       ) : (
-                        <div className="text-sm text-gray-500">No classes assigned</div>
+                        <span className="text-slate-400 text-sm">No classes assigned</span>
                       )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <button
-                        onClick={() => handleOpenAssignmentModal(subject)}
-                        className="text-green-600 hover:text-green-900 mr-3"
-                        title="Assign Teacher"
-                      >
-                        <Users size={18} />
-                      </button>
-                      <button
-                        onClick={() => handleEditSubject(subject)}
-                        className="text-blue-600 hover:text-blue-900 mr-3"
-                        title="Edit Subject"
-                      >
-                        <Edit size={18} />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteSubject(subject.id)}
-                        className="text-red-600 hover:text-red-900"
-                        title="Delete Subject"
-                      >
-                        <Trash size={18} />
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="5" className="px-6 py-4 text-center text-gray-500">
-                    No subjects found
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end space-x-2 pt-4 border-t border-slate-200">
+                    <button
+                      onClick={() => handleOpenAssignmentModal(subject)}
+                      className="p-2 text-green-600 hover:text-green-700 hover:bg-green-50 rounded-lg transition-all duration-200"
+                      title="Assign Teacher"
+                    >
+                      <Users size={18} />
+                    </button>
+                    <button
+                      onClick={() => handleEditSubject(subject)}
+                      className="p-2 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-lg transition-all duration-200"
+                      title="Edit Subject"
+                    >
+                      <Edit size={18} />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteSubject(subject.id)}
+                      className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all duration-200"
+                      title="Delete Subject"
+                    >
+                      <Trash size={18} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="col-span-full">
+              <div className="text-center py-12">
+                <BookOpen size={48} className="text-slate-300 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-slate-500 mb-2">No subjects found</h3>
+                <p className="text-slate-400">Create your first subject to get started</p>
+              </div>
+            </div>
+          )}
         </div>
+
+        {/* Assignment Modal */}
+        {showAssignmentModal && currentSubject && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md animate-fade-in">
+              <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4 rounded-t-2xl">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-semibold text-white">
+                    Assign to {currentSubject.name}
+                  </h2>
+                  <button
+                    onClick={() => setShowAssignmentModal(false)}
+                    className="text-white hover:bg-white/20 rounded-lg p-1 transition-all duration-200"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-6">
+                <div className="mb-6 space-y-2">
+                  <label className="block text-sm font-semibold text-slate-700">
+                    Select Teacher <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    name="teacherId"
+                    value={assignmentData.teacherId}
+                    onChange={handleAssignmentChange}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                  >
+                    <option value="">Choose a teacher</option>
+                    {teachers.map((teacher) => (
+                      <option key={teacher.id} value={teacher.id}>
+                        {teacher.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="mb-6 space-y-2">
+                  <label className="block text-sm font-semibold text-slate-700">
+                    Select Classes <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    name="classIds"
+                    multiple
+                    value={assignmentData.classIds}
+                    onChange={handleAssignmentChange}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 h-32"
+                  >
+                    {classes.map((cls) => (
+                      <option key={cls.id} value={cls.id}>
+                        {cls.name}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-slate-500">Hold Ctrl (Cmd on Mac) to select multiple classes</p>
+                </div>
+
+                <div className="flex justify-end space-x-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowAssignmentModal(false)}
+                    className="px-6 py-3 border border-slate-300 rounded-xl text-slate-700 hover:bg-slate-50 transition-all duration-200 font-medium"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    onClick={handleAssignmentSubmit} 
+                    className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 font-medium shadow-lg"
+                  >
+                    Assign Teacher
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Assignment Modal */}
-      {showAssignmentModal && currentSubject && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg w-full max-w-md mx-4">
-            <div className="p-4 bg-blue-50 border-b border-blue-100">
-              <h2 className="text-lg font-semibold">Assign Teacher to {currentSubject.name}</h2>
-            </div>
-
-            <form onSubmit={handleAssignmentSubmit} className="p-4">
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Select Teacher <span className="text-red-500">*</span>
-                </label>
-                <select
-                  name="teacherId"
-                  value={assignmentData.teacherId}
-                  onChange={handleAssignmentChange}
-                  className="w-full p-2 border border-gray-300 rounded-md"
-                  required
-                >
-                  <option value="">Select Teacher</option>
-                  {teachers.map((teacher) => (
-                    <option key={teacher.id} value={teacher.id}>
-                      {teacher.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Select Classes <span className="text-red-500">*</span>
-                </label>
-                <select
-                  name="classIds"
-                  multiple
-                  value={assignmentData.classIds}
-                  onChange={handleAssignmentChange}
-                  className="w-full p-2 border border-gray-300 rounded-md h-32"
-                  required
-                >
-                  {classes.map((cls) => (
-                    <option key={cls.id} value={cls.id}>
-                      {cls.name}
-                    </option>
-                  ))}
-                </select>
-                <p className="text-xs text-gray-500 mt-1">Hold Ctrl (or Cmd on Mac) to select multiple classes</p>
-              </div>
-
-              <div className="flex justify-end space-x-2 mt-6">
-                <button
-                  type="button"
-                  onClick={() => setShowAssignmentModal(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-                  Assign Teacher
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <style jsx>{`
+        @keyframes fade-in {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.3s ease-out;
+        }
+      `}</style>
     </div>
   )
 }
