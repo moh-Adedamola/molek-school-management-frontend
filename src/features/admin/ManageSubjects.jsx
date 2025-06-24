@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Plus, Edit, Trash, Search, Users, BookOpen, GraduationCap, X } from "lucide-react"
+import { Plus, Edit, Trash, Search, Users, BookOpen, GraduationCap, X, Menu } from "lucide-react"
 
 // Mock API call - replace with actual API call in production
 const fetchSubjectsData = () => {
@@ -271,7 +271,7 @@ const ManageSubjects = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center px-4">
         <div className="text-center">
           <div className="relative">
             <div className="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto"></div>
@@ -284,40 +284,40 @@ const ManageSubjects = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-3 sm:p-4 lg:p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
+        <div className="mb-6 sm:mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center space-x-3">
-              <div className="p-3 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl shadow-lg">
-                <BookOpen className="w-8 h-8 text-white" />
+              <div className="p-2 sm:p-3 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl shadow-lg">
+                <BookOpen className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
               </div>
-              <div>
-                <h1 className="text-3xl font-bold text-slate-900">Subject Management</h1>
-                <p className="text-slate-600 mt-1">Organize and manage academic subjects</p>
+              <div className="min-w-0 flex-1">
+                <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 truncate">Subject Management</h1>
+                <p className="text-slate-600 mt-1 text-sm sm:text-base">Organize and manage academic subjects</p>
               </div>
             </div>
             <button
               onClick={handleAddSubject}
-              className="group relative bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center space-x-2"
+              className="group relative bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center justify-center space-x-2 w-full sm:w-auto"
             >
-              <Plus size={20} />
-              <span>Add Subject</span>
+              <Plus size={18} className="sm:w-5 sm:h-5" />
+              <span className="text-sm sm:text-base">Add Subject</span>
             </button>
           </div>
         </div>
 
         {/* Search Bar */}
-        <div className="mb-8">
-          <div className="relative max-w-md">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <Search size={20} className="text-slate-400" />
+        <div className="mb-6 sm:mb-8">
+          <div className="relative w-full sm:max-w-md">
+            <div className="absolute inset-y-0 left-0 pl-3 sm:pl-4 flex items-center pointer-events-none">
+              <Search size={18} className="sm:w-5 sm:h-5 text-slate-400" />
             </div>
             <input
               type="text"
               placeholder="Search subjects..."
-              className="w-full pl-12 pr-4 py-3 bg-white/70 backdrop-blur-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 shadow-sm"
+              className="w-full pl-10 sm:pl-12 pr-4 py-2.5 sm:py-3 bg-white/70 backdrop-blur-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 shadow-sm text-sm sm:text-base"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -326,16 +326,16 @@ const ManageSubjects = () => {
 
         {/* Subject Form */}
         {showForm && (
-          <div className="mb-8 animate-fade-in">
+          <div className="mb-6 sm:mb-8 animate-fade-in">
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
-              <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4">
-                <h2 className="text-xl font-semibold text-white">
+              <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-4 sm:px-6 py-3 sm:py-4">
+                <h2 className="text-lg sm:text-xl font-semibold text-white">
                   {editingSubject ? "Edit Subject" : "Create New Subject"}
                 </h2>
               </div>
 
-              <div className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div className="p-4 sm:p-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
                   <div className="space-y-2">
                     <label className="block text-sm font-semibold text-slate-700">
                       Subject Name <span className="text-red-500">*</span>
@@ -345,7 +345,7 @@ const ManageSubjects = () => {
                       name="name"
                       value={formData.name}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 text-sm sm:text-base"
                       placeholder="Enter subject name"
                     />
                   </div>
@@ -359,35 +359,35 @@ const ManageSubjects = () => {
                       name="code"
                       value={formData.code}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 text-sm sm:text-base"
                       placeholder="e.g., MTH, ENG"
                     />
                   </div>
                 </div>
 
-                <div className="mb-6 space-y-2">
+                <div className="mb-4 sm:mb-6 space-y-2">
                   <label className="block text-sm font-semibold text-slate-700">Description</label>
                   <textarea
                     name="description"
                     value={formData.description}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 resize-none"
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 resize-none text-sm sm:text-base"
                     rows="3"
                     placeholder="Brief description of the subject"
                   ></textarea>
                 </div>
 
-                <div className="flex justify-end space-x-3">
+                <div className="flex flex-col sm:flex-row justify-end gap-3">
                   <button
                     type="button"
                     onClick={() => setShowForm(false)}
-                    className="px-6 py-3 border border-slate-300 rounded-xl text-slate-700 hover:bg-slate-50 transition-all duration-200 font-medium"
+                    className="px-4 sm:px-6 py-2.5 sm:py-3 border border-slate-300 rounded-xl text-slate-700 hover:bg-slate-50 transition-all duration-200 font-medium text-sm sm:text-base order-2 sm:order-1"
                   >
                     Cancel
                   </button>
                   <button 
                     onClick={handleSubmit} 
-                    className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 font-medium shadow-lg"
+                    className="px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 font-medium shadow-lg text-sm sm:text-base order-1 sm:order-2"
                   >
                     {editingSubject ? "Update Subject" : "Create Subject"}
                   </button>
@@ -398,52 +398,52 @@ const ManageSubjects = () => {
         )}
 
         {/* Subjects Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
           {filteredSubjects.length > 0 ? (
             filteredSubjects.map((subject) => (
               <div
                 key={subject.id}
                 className="group bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl border border-slate-200 overflow-hidden transition-all duration-300 hover:-translate-y-1"
               >
-                <div className="p-6">
+                <div className="p-4 sm:p-6">
                   <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-center space-x-3 mb-2">
-                        <span className="inline-block px-3 py-1 bg-gradient-to-r from-indigo-100 to-purple-100 text-indigo-700 text-sm font-semibold rounded-full">
+                        <span className="inline-block px-2 sm:px-3 py-1 bg-gradient-to-r from-indigo-100 to-purple-100 text-indigo-700 text-xs sm:text-sm font-semibold rounded-full">
                           {subject.code}
                         </span>
                       </div>
-                      <h3 className="text-xl font-bold text-slate-900 mb-2">{subject.name}</h3>
-                      <p className="text-slate-600 text-sm leading-relaxed">{subject.description}</p>
+                      <h3 className="text-lg sm:text-xl font-bold text-slate-900 mb-2 break-words">{subject.name}</h3>
+                      <p className="text-slate-600 text-xs sm:text-sm leading-relaxed break-words">{subject.description}</p>
                     </div>
                   </div>
 
-                  <div className="space-y-4 mb-6">
+                  <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
                     <div>
                       <div className="flex items-center space-x-2 mb-2">
-                        <GraduationCap size={16} className="text-slate-500" />
-                        <span className="text-sm font-semibold text-slate-700">Teachers</span>
+                        <GraduationCap size={14} className="sm:w-4 sm:h-4 text-slate-500 flex-shrink-0" />
+                        <span className="text-xs sm:text-sm font-semibold text-slate-700">Teachers</span>
                       </div>
                       {subject.assignedTeachers.length > 0 ? (
                         <div className="flex flex-wrap gap-1">
                           {subject.assignedTeachers.map((teacher, index) => (
                             <span
                               key={index}
-                              className="inline-block px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full"
+                              className="inline-block px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full break-words"
                             >
                               {teacher}
                             </span>
                           ))}
                         </div>
                       ) : (
-                        <span className="text-slate-400 text-sm">No teachers assigned</span>
+                        <span className="text-slate-400 text-xs sm:text-sm">No teachers assigned</span>
                       )}
                     </div>
 
                     <div>
                       <div className="flex items-center space-x-2 mb-2">
-                        <Users size={16} className="text-slate-500" />
-                        <span className="text-sm font-semibold text-slate-700">Classes</span>
+                        <Users size={14} className="sm:w-4 sm:h-4 text-slate-500 flex-shrink-0" />
+                        <span className="text-xs sm:text-sm font-semibold text-slate-700">Classes</span>
                       </div>
                       {subject.assignedClasses.length > 0 ? (
                         <div className="flex flex-wrap gap-1">
@@ -457,32 +457,32 @@ const ManageSubjects = () => {
                           ))}
                         </div>
                       ) : (
-                        <span className="text-slate-400 text-sm">No classes assigned</span>
+                        <span className="text-slate-400 text-xs sm:text-sm">No classes assigned</span>
                       )}
                     </div>
                   </div>
 
-                  <div className="flex justify-end space-x-2 pt-4 border-t border-slate-200">
+                  <div className="flex justify-end space-x-1 sm:space-x-2 pt-3 sm:pt-4 border-t border-slate-200">
                     <button
                       onClick={() => handleOpenAssignmentModal(subject)}
-                      className="p-2 text-green-600 hover:text-green-700 hover:bg-green-50 rounded-lg transition-all duration-200"
+                      className="p-2 text-green-600 hover:text-green-700 hover:bg-green-50 rounded-lg transition-all duration-200 touch-manipulation"
                       title="Assign Teacher"
                     >
-                      <Users size={18} />
+                      <Users size={16} className="sm:w-[18px] sm:h-[18px]" />
                     </button>
                     <button
                       onClick={() => handleEditSubject(subject)}
-                      className="p-2 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-lg transition-all duration-200"
+                      className="p-2 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-lg transition-all duration-200 touch-manipulation"
                       title="Edit Subject"
                     >
-                      <Edit size={18} />
+                      <Edit size={16} className="sm:w-[18px] sm:h-[18px]" />
                     </button>
                     <button
                       onClick={() => handleDeleteSubject(subject.id)}
-                      className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all duration-200"
+                      className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all duration-200 touch-manipulation"
                       title="Delete Subject"
                     >
-                      <Trash size={18} />
+                      <Trash size={16} className="sm:w-[18px] sm:h-[18px]" />
                     </button>
                   </div>
                 </div>
@@ -490,10 +490,10 @@ const ManageSubjects = () => {
             ))
           ) : (
             <div className="col-span-full">
-              <div className="text-center py-12">
-                <BookOpen size={48} className="text-slate-300 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-slate-500 mb-2">No subjects found</h3>
-                <p className="text-slate-400">Create your first subject to get started</p>
+              <div className="text-center py-8 sm:py-12">
+                <BookOpen size={40} className="sm:w-12 sm:h-12 text-slate-300 mx-auto mb-4" />
+                <h3 className="text-lg sm:text-xl font-semibold text-slate-500 mb-2">No subjects found</h3>
+                <p className="text-slate-400 text-sm sm:text-base">Create your first subject to get started</p>
               </div>
             </div>
           )}
@@ -502,23 +502,23 @@ const ManageSubjects = () => {
         {/* Assignment Modal */}
         {showAssignmentModal && currentSubject && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md animate-fade-in">
-              <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4 rounded-t-2xl">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto animate-fade-in">
+              <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-4 sm:px-6 py-3 sm:py-4 rounded-t-2xl sticky top-0">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-semibold text-white">
+                  <h2 className="text-lg sm:text-xl font-semibold text-white truncate pr-4">
                     Assign to {currentSubject.name}
                   </h2>
                   <button
                     onClick={() => setShowAssignmentModal(false)}
-                    className="text-white hover:bg-white/20 rounded-lg p-1 transition-all duration-200"
+                    className="text-white hover:bg-white/20 rounded-lg p-1.5 sm:p-1 transition-all duration-200 flex-shrink-0 touch-manipulation"
                   >
-                    <X size={20} />
+                    <X size={18} className="sm:w-5 sm:h-5" />
                   </button>
                 </div>
               </div>
 
-              <div className="p-6">
-                <div className="mb-6 space-y-2">
+              <div className="p-4 sm:p-6">
+                <div className="mb-4 sm:mb-6 space-y-2">
                   <label className="block text-sm font-semibold text-slate-700">
                     Select Teacher <span className="text-red-500">*</span>
                   </label>
@@ -526,7 +526,7 @@ const ManageSubjects = () => {
                     name="teacherId"
                     value={assignmentData.teacherId}
                     onChange={handleAssignmentChange}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 text-sm sm:text-base"
                   >
                     <option value="">Choose a teacher</option>
                     {teachers.map((teacher) => (
@@ -537,7 +537,7 @@ const ManageSubjects = () => {
                   </select>
                 </div>
 
-                <div className="mb-6 space-y-2">
+                <div className="mb-4 sm:mb-6 space-y-2">
                   <label className="block text-sm font-semibold text-slate-700">
                     Select Classes <span className="text-red-500">*</span>
                   </label>
@@ -546,7 +546,7 @@ const ManageSubjects = () => {
                     multiple
                     value={assignmentData.classIds}
                     onChange={handleAssignmentChange}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 h-32"
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 h-24 sm:h-32 text-sm sm:text-base"
                   >
                     {classes.map((cls) => (
                       <option key={cls.id} value={cls.id}>
@@ -554,20 +554,20 @@ const ManageSubjects = () => {
                       </option>
                     ))}
                   </select>
-                  <p className="text-xs text-slate-500">Hold Ctrl (Cmd on Mac) to select multiple classes</p>
+                  <p className="text-xs text-slate-500">Hold and tap to select multiple classes</p>
                 </div>
 
-                <div className="flex justify-end space-x-3">
+                <div className="flex flex-col sm:flex-row justify-end gap-3">
                   <button
                     type="button"
                     onClick={() => setShowAssignmentModal(false)}
-                    className="px-6 py-3 border border-slate-300 rounded-xl text-slate-700 hover:bg-slate-50 transition-all duration-200 font-medium"
+                    className="px-4 sm:px-6 py-2.5 sm:py-3 border border-slate-300 rounded-xl text-slate-700 hover:bg-slate-50 transition-all duration-200 font-medium text-sm sm:text-base order-2 sm:order-1"
                   >
                     Cancel
                   </button>
                   <button 
                     onClick={handleAssignmentSubmit} 
-                    className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 font-medium shadow-lg"
+                    className="px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 font-medium shadow-lg text-sm sm:text-base order-1 sm:order-2"
                   >
                     Assign Teacher
                   </button>
@@ -591,6 +591,22 @@ const ManageSubjects = () => {
         }
         .animate-fade-in {
           animation: fade-in 0.3s ease-out;
+        }
+        
+        /* Enhanced touch targets for mobile */
+        @media (max-width: 640px) {
+          .touch-manipulation {
+            min-height: 44px;
+            min-width: 44px;
+          }
+        }
+        
+        /* Prevent horizontal scrolling on very small screens */
+        @media (max-width: 320px) {
+          .break-words {
+            word-break: break-word;
+            overflow-wrap: break-word;
+          }
         }
       `}</style>
     </div>
