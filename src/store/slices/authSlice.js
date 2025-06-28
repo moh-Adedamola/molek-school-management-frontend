@@ -1,4 +1,4 @@
-import { createSlice } from "@reduxjs/toolkit"
+import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
   user: null,
@@ -8,56 +8,66 @@ const initialState = {
   isLoading: false,
   error: null,
   pendingTeachers: [],
-}
+};
 
 const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
     loginStart: (state) => {
-      state.isLoading = true
-      state.error = null
+      state.isLoading = true;
+      state.error = null;
     },
     loginSuccess: (state, action) => {
-      state.isLoading = false
-      state.isAuthenticated = true
-      state.user = action.payload.user
-      state.token = action.payload.token
-      state.role = action.payload.user.role
-      localStorage.setItem("token", action.payload.token)
-      localStorage.setItem("role", action.payload.user.role)
+      state.isLoading = false;
+      const user = action.payload.user;
+      state.token = action.payload.token;
+      state.user = user;
+      state.role = user.role;
+
+      // Handle verified status for teachers
+      if (user.role.toLowerCase() === "teacher" && !user.verified) {
+        state.isAuthenticated = false;
+        state.error = "You need to be verified by admin. Contact admin.";
+      } else {
+        state.isAuthenticated = true;
+        localStorage.setItem("token", action.payload.token);
+        localStorage.setItem("role", user.role);
+      }
     },
     loginFailure: (state, action) => {
-      state.isLoading = false
-      state.error = action.payload
+      state.isLoading = false;
+      state.isAuthenticated = false;
+      state.error = action.payload.message || action.payload || "Login failed";
     },
     registerStart: (state) => {
-      state.isLoading = true
-      state.error = null
+      state.isLoading = true;
+      state.error = null;
     },
     registerSuccess: (state) => {
-      state.isLoading = false
+      state.isLoading = false;
     },
     registerFailure: (state, action) => {
-      state.isLoading = false
-      state.error = action.payload
+      state.isLoading = false;
+      state.error = action.payload.message || action.payload || "Registration failed";
     },
     logout: (state) => {
-      state.user = null
-      state.token = null
-      state.isAuthenticated = false
-      state.role = null
-      localStorage.removeItem("token")
-      localStorage.removeItem("role")
+      state.user = null;
+      state.token = null;
+      state.isAuthenticated = false;
+      state.role = null;
+      state.error = null;
+      localStorage.removeItem("token");
+      localStorage.removeItem("role");
     },
     setPendingTeachers: (state, action) => {
-      state.pendingTeachers = action.payload
+      state.pendingTeachers = action.payload;
     },
     approveTeacher: (state, action) => {
-      state.pendingTeachers = state.pendingTeachers.filter((teacher) => teacher.id !== action.payload)
+      state.pendingTeachers = state.pendingTeachers.filter((teacher) => teacher.id !== action.payload);
     },
   },
-})
+});
 
 export const {
   loginStart,
@@ -69,6 +79,6 @@ export const {
   logout,
   setPendingTeachers,
   approveTeacher,
-} = authSlice.actions
+} = authSlice.actions;
 
-export default authSlice.reducer
+export default authSlice.reducer;

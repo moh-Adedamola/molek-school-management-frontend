@@ -1,86 +1,63 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useDispatch, useSelector } from "react-redux"
-import { useNavigate } from "react-router-dom"
-import { loginStart, loginSuccess, loginFailure } from "../../store/slices/authSlice"
-import { toast } from "react-toastify"
-
-// Mock API call - replace with actual API call in production
-const mockLogin = (credentials) => {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      const users = [
-        { id: 1, email: "admin@school.com", password: "password", name: "Admin User", role: "admin" },
-        {
-          id: 2,
-          email: "teacher@school.com",
-          password: "password",
-          name: "Teacher User",
-          role: "teacher",
-          approved: true,
-        },
-        {
-          id: 3,
-          email: "teacher2@school.com",
-          password: "password",
-          name: "Pending Teacher",
-          role: "teacher",
-          approved: false,
-        },
-        { id: 4, email: "parent@school.com", password: "password", name: "Parent User", role: "parent" },
-      ]
-
-      const user = users.find((u) => u.email === credentials.email && u.password === credentials.password)
-
-      if (user) {
-        if (user.role === "teacher" && !user.approved) {
-          reject({ message: "Your account is pending approval by an administrator." })
-        } else {
-          resolve({
-            user: { id: user.id, name: user.name, email: user.email, role: user.role },
-            token: "mock-jwt-token",
-          })
-        }
-      } else {
-        reject({ message: "Invalid email or password" })
-      }
-    }, 1000)
-  })
-}
+import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { loginStart, loginSuccess, loginFailure } from "../../store/slices/authSlice";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import authService from "../../api/authService";
+import { ToastContainer } from "react-toastify";
 
 const Login = () => {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [showPassword, setShowPassword] = useState(false)
-  const [focusedField, setFocusedField] = useState("")
-  const dispatch = useDispatch()
-  const navigate = useNavigate()
-  const { isLoading, error } = useSelector((state) => state.auth)
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [focusedField, setFocusedField] = useState("");
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { isLoading, error } = useSelector((state) => state.auth);
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    dispatch(loginStart())
+    e.preventDefault();
+    dispatch(loginStart());
 
     try {
-      const response = await mockLogin({ email, password })
-      dispatch(loginSuccess(response))
+      const credentials = { email, password };
+      console.log("Sending login credentials:", credentials); // Debug log
+      const response = await authService.login(credentials);
+      console.log("Login response:", response);
+      const token = response.token; // Extract token
+      const user = response.userResponse; // Extract userResponse
+      if (!token || !user) throw new Error("Login response missing required data");
+
+      // Store token
+      localStorage.setItem("token", token);
+      dispatch(loginSuccess({ token, user })); // Pass both token and user to auth slice
 
       // Redirect based on role
-      if (response.user.role === "admin") {
-        navigate("/admin")
-      } else if (response.user.role === "teacher") {
-        navigate("/teacher")
-      } else if (response.user.role === "parent") {
-        navigate("/parent")
+      const role = user.role.toLowerCase();
+    console.log("User role:", role, "Verified:", response.userResponse.verified);
+      if (role === "admin") {
+        navigate("/admin");
+      } else if (role === "teacher") {
+        // Check verified status for teachers
+        if (!user.verified) {
+          throw new Error("You need to be verified by admin. Contact admin.");
+        }
+        console.log("Navigating to /teacher")
+        navigate("/teacher");
+      } else if (role === "parent") {
+        navigate("/parent");
       }
 
-      toast.success("Login successful!")
+      toast.success("Login successful!");
     } catch (error) {
-      dispatch(loginFailure(error.message))
-      toast.error(error.message)
+      console.log("Login error:", error.message); // Debug log
+      dispatch(loginFailure(error.message));
+      toast.error(error.message || "Login failed");
     }
-  }
+  };
 
   return (
     <>
@@ -115,28 +92,6 @@ const Login = () => {
           </div>
         )}
 
-        {/* Demo Credentials Info */}
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-          <div className="flex items-start space-x-3">
-            <div className="flex-shrink-0 mt-0.5">
-              <div className="w-5 h-5 bg-blue-100 rounded-full flex items-center justify-center">
-                <svg className="w-3 h-3 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                </svg>
-              </div>
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-medium text-blue-800 mb-2">Demo Accounts Available:</p>
-              <div className="text-xs text-blue-700 space-y-1">
-                <div><strong>Admin:</strong> admin@school.com</div>
-                <div><strong>Teacher:</strong> teacher@school.com</div>
-                <div><strong>Parent:</strong> parent@school.com</div>
-                <div className="mt-1"><strong>Password:</strong> password</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Login Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Email Field */}
@@ -146,7 +101,7 @@ const Login = () => {
             </label>
             <div className="relative">
               <div className={`absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors duration-200 ${
-                focusedField === 'email' || email ? 'text-indigo-500' : 'text-slate-400'
+                focusedField === "email" || email ? "text-indigo-500" : "text-slate-400"
               }`}>
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
@@ -160,12 +115,12 @@ const Login = () => {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                onFocus={() => setFocusedField('email')}
-                onBlur={() => setFocusedField('')}
+                onFocus={() => setFocusedField("email")}
+                onBlur={() => setFocusedField("")}
                 className={`block w-full pl-12 pr-4 py-3 rounded-xl border transition-all duration-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-offset-1 ${
-                  focusedField === 'email' 
-                    ? 'border-indigo-300 focus:border-indigo-500 focus:ring-indigo-500 bg-white shadow-sm' 
-                    : 'border-slate-300 hover:border-slate-400 bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-indigo-500'
+                  focusedField === "email"
+                    ? "border-indigo-300 focus:border-indigo-500 focus:ring-indigo-500 bg-white shadow-sm"
+                    : "border-slate-300 hover:border-slate-400 bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-indigo-500"
                 }`}
                 placeholder="Enter your email"
               />
@@ -179,7 +134,7 @@ const Login = () => {
             </label>
             <div className="relative">
               <div className={`absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors duration-200 ${
-                focusedField === 'password' || password ? 'text-indigo-500' : 'text-slate-400'
+                focusedField === "password" || password ? "text-indigo-500" : "text-slate-400"
               }`}>
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -193,12 +148,12 @@ const Login = () => {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                onFocus={() => setFocusedField('password')}
-                onBlur={() => setFocusedField('')}
+                onFocus={() => setFocusedField("password")}
+                onBlur={() => setFocusedField("")}
                 className={`block w-full pl-12 pr-12 py-3 rounded-xl border transition-all duration-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-offset-1 ${
-                  focusedField === 'password' 
-                    ? 'border-indigo-300 focus:border-indigo-500 focus:ring-indigo-500 bg-white shadow-sm' 
-                    : 'border-slate-300 hover:border-slate-400 bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-indigo-500'
+                  focusedField === "password"
+                    ? "border-indigo-300 focus:border-indigo-500 focus:ring-indigo-500 bg-white shadow-sm"
+                    : "border-slate-300 hover:border-slate-400 bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-indigo-500"
                 }`}
                 placeholder="Enter your password"
               />
@@ -223,8 +178,8 @@ const Login = () => {
 
           {/* Forgot Password Link */}
           <div className="flex justify-end">
-            <a 
-              href="/forgot-password" 
+            <a
+              href="/forgot-password"
               className="text-sm font-medium text-indigo-600 hover:text-indigo-500 transition-colors duration-200 hover:underline"
             >
               Forgot your password?
@@ -236,9 +191,9 @@ const Login = () => {
             type="submit"
             disabled={isLoading}
             className={`w-full flex justify-center items-center py-3.5 px-4 rounded-xl shadow-sm text-sm font-semibold text-white transition-all duration-200 transform ${
-              isLoading 
-                ? 'bg-slate-400 cursor-not-allowed' 
-                : 'bg-gradient-to-r from-slate-600 to-indigo-600 hover:from-slate-700 hover:to-indigo-700 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'
+              isLoading
+                ? "bg-slate-400 cursor-not-allowed"
+                : "bg-gradient-to-r from-slate-600 to-indigo-600 hover:from-slate-700 hover:to-indigo-700 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
             }`}
           >
             {isLoading ? (
@@ -285,23 +240,24 @@ const Login = () => {
       </div>
 
       {/* Custom Styles */}
-      <style jsx>{`
-        @keyframes shake {
-          0%, 100% { transform: translateX(0); }
-          10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
-          20%, 40%, 60%, 80% { transform: translateX(2px); }
-        }
-        
-        .animate-shake {
-          animation: shake 0.5s ease-in-out;
-        }
-        
-        .group:hover .group-hover\\:translate-x-1 {
-          transform: translateX(0.25rem);
-        }
-      `}</style>
+      <style>{`
+      @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
+        20%, 40%, 60%, 80% { transform: translateX(2px); }
+      }
+      
+      .animate-shake {
+        animation: shake 0.5s ease-in-out;
+      }
+      
+      .group:hover .group-hover\\:translate-x-1 {
+        transform: translateX(0.25rem);
+      }
+    `}</style>
+    <ToastContainer /> {/* Ensure this is present */}
     </>
-  )
-}
+  );
+};
 
-export default Login
+export default Login;

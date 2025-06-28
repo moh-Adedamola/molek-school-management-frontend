@@ -1,61 +1,55 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useDispatch, useSelector } from "react-redux"
-import { useNavigate } from "react-router-dom"
-import { registerStart, registerSuccess, registerFailure } from "../../store/slices/authSlice"
-import { toast } from "react-toastify"
-
-const mockRegister = (userData) => {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      if (userData.email && userData.password && userData.firstName && userData.lastName && userData.role) {
-        resolve({ success: true })
-      } else {
-        reject({ message: "All fields are required" })
-      }
-    }, 1000)
-  })
-}
+import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { registerStart, registerSuccess, registerFailure } from "../../store/slices/authSlice";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import authService from "../../api/authService";
+import { ToastContainer } from "react-toastify";
 
 const Register = () => {
-  const [firstName, setFirstName] = useState("")
-  const [lastName, setLastName] = useState("")
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
-  const [role, setRole] = useState("teacher")
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [focusedField, setFocusedField] = useState("")
-  const dispatch = useDispatch()
-  const navigate = useNavigate()
-  const { isLoading, error } = useSelector((state) => state.auth)
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [role, setRole] = useState("TEACHER"); // Updated to role, default to TEACHER
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [focusedField, setFocusedField] = useState("");
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { isLoading, error } = useSelector((state) => state.auth);
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
 
     if (password !== confirmPassword) {
-      toast.error("Passwords do not match")
-      return
+      toast.error("Passwords do not match");
+      return;
     }
 
-    dispatch(registerStart())
+    dispatch(registerStart());
 
     try {
-      await mockRegister({ firstName, lastName, email, password, role })
-      dispatch(registerSuccess())
+      const userData = { firstName, lastName, email, password, confirmPassword, role }; // Using role
+      console.log("Sending registration data:", userData); // Debug log
+      await authService.register(userData);
+      dispatch(registerSuccess());
 
-      toast.success("Registration successful! Please log in.")
-      if (role === "teacher") {
-        toast.info("Your account will be reviewed by an administrator before you can log in.")
+      toast.success("Registration successful! Please log in.");
+      if (role === "TEACHER") {
+        toast.info("Your account will be reviewed by an administrator before you can log in.");
       }
-      navigate("/login")
+      navigate("/login");
     } catch (error) {
-      dispatch(registerFailure(error.message))
-      toast.error(error.message)
+      console.log("Registration error:", error.message); // Debug log
+      dispatch(registerFailure(error.message));
+      toast.error(error.message || "Registration failed");
     }
-  }
+  };
 
   return (
     <>
@@ -101,7 +95,7 @@ const Register = () => {
               </label>
               <div className="relative">
                 <div className={`absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors duration-200 ${
-                  focusedField === 'firstName' || firstName ? 'text-indigo-500' : 'text-slate-400'
+                  focusedField === "firstName" || firstName ? "text-indigo-500" : "text-slate-400"
                 }`}>
                   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -115,12 +109,12 @@ const Register = () => {
                   required
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
-                  onFocus={() => setFocusedField('firstName')}
-                  onBlur={() => setFocusedField('')}
+                  onFocus={() => setFocusedField("firstName")}
+                  onBlur={() => setFocusedField("")}
                   className={`block w-full pl-12 pr-4 py-3 rounded-xl border transition-all duration-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-offset-1 ${
-                    focusedField === 'firstName' 
-                      ? 'border-indigo-300 focus:border-indigo-500 focus:ring-indigo-500 bg-white shadow-sm' 
-                      : 'border-slate-300 hover:border-slate-400 bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-indigo-500'
+                    focusedField === "firstName"
+                      ? "border-indigo-300 focus:border-indigo-500 focus:ring-indigo-500 bg-white shadow-sm"
+                      : "border-slate-300 hover:border-slate-400 bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-indigo-500"
                   }`}
                   placeholder="John"
                 />
@@ -134,7 +128,7 @@ const Register = () => {
               </label>
               <div className="relative">
                 <div className={`absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors duration-200 ${
-                  focusedField === 'lastName' || lastName ? 'text-indigo-500' : 'text-slate-400'
+                  focusedField === "lastName" || lastName ? "text-indigo-500" : "text-slate-400"
                 }`}>
                   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -148,12 +142,12 @@ const Register = () => {
                   required
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  onFocus={() => setFocusedField('lastName')}
-                  onBlur={() => setFocusedField('')}
+                  onFocus={() => setFocusedField("lastName")}
+                  onBlur={() => setFocusedField("")}
                   className={`block w-full pl-12 pr-4 py-3 rounded-xl border transition-all duration-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-offset-1 ${
-                    focusedField === 'lastName' 
-                      ? 'border-indigo-300 focus:border-indigo-500 focus:ring-indigo-500 bg-white shadow-sm' 
-                      : 'border-slate-300 hover:border-slate-400 bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-indigo-500'
+                    focusedField === "lastName"
+                      ? "border-indigo-300 focus:border-indigo-500 focus:ring-indigo-500 bg-white shadow-sm"
+                      : "border-slate-300 hover:border-slate-400 bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-indigo-500"
                   }`}
                   placeholder="Doe"
                 />
@@ -168,7 +162,7 @@ const Register = () => {
             </label>
             <div className="relative">
               <div className={`absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors duration-200 ${
-                focusedField === 'email' || email ? 'text-indigo-500' : 'text-slate-400'
+                focusedField === "email" || email ? "text-indigo-500" : "text-slate-400"
               }`}>
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
@@ -182,12 +176,12 @@ const Register = () => {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                onFocus={() => setFocusedField('email')}
-                onBlur={() => setFocusedField('')}
+                onFocus={() => setFocusedField("email")}
+                onBlur={() => setFocusedField("")}
                 className={`block w-full pl-12 pr-4 py-3 rounded-xl border transition-all duration-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-offset-1 ${
-                  focusedField === 'email' 
-                    ? 'border-indigo-300 focus:border-indigo-500 focus:ring-indigo-500 bg-white shadow-sm' 
-                    : 'border-slate-300 hover:border-slate-400 bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-indigo-500'
+                  focusedField === "email"
+                    ? "border-indigo-300 focus:border-indigo-500 focus:ring-indigo-500 bg-white shadow-sm"
+                    : "border-slate-300 hover:border-slate-400 bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-indigo-500"
                 }`}
                 placeholder="you@example.com"
               />
@@ -201,7 +195,7 @@ const Register = () => {
             </label>
             <div className="relative">
               <div className={`absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors duration-200 ${
-                focusedField === 'password' || password ? 'text-indigo-500' : 'text-slate-400'
+                focusedField === "password" || password ? "text-indigo-500" : "text-slate-400"
               }`}>
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -215,12 +209,12 @@ const Register = () => {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                onFocus={() => setFocusedField('password')}
-                onBlur={() => setFocusedField('')}
+                onFocus={() => setFocusedField("password")}
+                onBlur={() => setFocusedField("")}
                 className={`block w-full pl-12 pr-12 py-3 rounded-xl border transition-all duration-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-offset-1 ${
-                  focusedField === 'password' 
-                    ? 'border-indigo-300 focus:border-indigo-500 focus:ring-indigo-500 bg-white shadow-sm' 
-                    : 'border-slate-300 hover:border-slate-400 bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-indigo-500'
+                  focusedField === "password"
+                    ? "border-indigo-300 focus:border-indigo-500 focus:ring-indigo-500 bg-white shadow-sm"
+                    : "border-slate-300 hover:border-slate-400 bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-indigo-500"
                 }`}
                 placeholder="Create a strong password"
               />
@@ -250,7 +244,7 @@ const Register = () => {
             </label>
             <div className="relative">
               <div className={`absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors duration-200 ${
-                focusedField === 'confirmPassword' || confirmPassword ? 'text-indigo-500' : 'text-slate-400'
+                focusedField === "confirmPassword" || confirmPassword ? "text-indigo-500" : "text-slate-400"
               }`}>
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -264,12 +258,12 @@ const Register = () => {
                 required
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                onFocus={() => setFocusedField('confirmPassword')}
-                onBlur={() => setFocusedField('')}
+                onFocus={() => setFocusedField("confirmPassword")}
+                onBlur={() => setFocusedField("")}
                 className={`block w-full pl-12 pr-12 py-3 rounded-xl border transition-all duration-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-offset-1 ${
-                  focusedField === 'confirmPassword' 
-                    ? 'border-indigo-300 focus:border-indigo-500 focus:ring-indigo-500 bg-white shadow-sm' 
-                    : 'border-slate-300 hover:border-slate-400 bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-indigo-500'
+                  focusedField === "confirmPassword"
+                    ? "border-indigo-300 focus:border-indigo-500 focus:ring-indigo-500 bg-white shadow-sm"
+                    : "border-slate-300 hover:border-slate-400 bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-indigo-500"
                 }`}
                 placeholder="Confirm your password"
               />
@@ -299,7 +293,7 @@ const Register = () => {
             </label>
             <div className="relative">
               <div className={`absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors duration-200 ${
-                focusedField === 'role' ? 'text-indigo-500' : 'text-slate-400'
+                focusedField === "role" ? "text-indigo-500" : "text-slate-400"
               }`}>
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
@@ -311,16 +305,16 @@ const Register = () => {
                 required
                 value={role}
                 onChange={(e) => setRole(e.target.value)}
-                onFocus={() => setFocusedField('role')}
-                onBlur={() => setFocusedField('')}
+                onFocus={() => setFocusedField("role")}
+                onBlur={() => setFocusedField("")}
                 className={`block w-full pl-12 pr-10 py-3 rounded-xl border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-1 ${
-                  focusedField === 'role' 
-                    ? 'border-indigo-300 focus:border-indigo-500 focus:ring-indigo-500 bg-white shadow-sm' 
-                    : 'border-slate-300 hover:border-slate-400 bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-indigo-500'
+                  focusedField === "role"
+                    ? "border-indigo-300 focus:border-indigo-500 focus:ring-indigo-500 bg-white shadow-sm"
+                    : "border-slate-300 hover:border-slate-400 bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-indigo-500"
                 } text-slate-700`}
               >
-                <option value="teacher">Teacher</option>
-                <option value="admin">Administrator</option>
+                <option value="TEACHER">Teacher</option>
+                <option value="ADMIN">Administrator</option>
               </select>
             </div>
             <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mt-3">
@@ -346,9 +340,9 @@ const Register = () => {
             type="submit"
             disabled={isLoading}
             className={`w-full flex justify-center items-center py-3.5 px-4 rounded-xl shadow-sm text-sm font-semibold text-white transition-all duration-200 transform ${
-              isLoading 
-                ? 'bg-slate-400 cursor-not-allowed' 
-                : 'bg-gradient-to-r from-slate-600 to-indigo-600 hover:from-slate-700 hover:to-indigo-700 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'
+              isLoading
+                ? "bg-slate-400 cursor-not-allowed"
+                : "bg-gradient-to-r from-slate-600 to-indigo-600 hover:from-slate-700 hover:to-indigo-700 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
             }`}
           >
             {isLoading ? (
@@ -410,8 +404,9 @@ const Register = () => {
           transform: translateX(0.25rem);
         }
       `}</style>
+      <ToastContainer /> {/* Ensure this is present */}
     </>
-  )
-}
+  );
+};
 
-export default Register
+export default Register;
